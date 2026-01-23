@@ -68,8 +68,43 @@ let rec infer (* [infer] expects... *)
     info := Some { domain; codomain };
     check p xenv tsubst tenv jenv term2 domain;
     codomain
-  | _ ->
-    failwith "TYPECHECKING IS NOT IMPLEMENTED YET!" (* do something here! *)
+  | TeLet (x, term1, term2) ->
+    let typ1 = infer p xenv loc tsubst tenv jenv term1 in
+
+    let tenv = bind x typ1 tenv in
+    infer p xenv loc tsubst tenv jenv term2
+  | TeTyAbs (a, body) ->
+    let xenv = Export.bind xenv a in
+
+    let typ = infer p xenv loc tsubst tenv jenv body in
+    TyForall (abstract a typ)
+  | TeTyApp (term, typ_app, info) ->
+    let typ_term = infer p xenv loc tsubst tenv jenv term in
+    let gen = deconstruct_univ xenv loc typ_term in
+
+    info := Some { gen };
+    fill gen typ_app
+  | TeData (dc, dctyps, terms, info) ->
+    let instantiated = lookup_and_instantiate p xenv loc dc dctyps in
+    let expected, result =
+      deconstruct_data_arrow xenv loc dc instantiated (List.length terms)
+    in
+
+    List.iter2 (check p xenv tsubst tenv jenv) terms expected;
+
+    info := Some result;
+    result
+  | TeTyAnnot (term, expected) ->
+    check p xenv tsubst tenv jenv term expected;
+    expected
+  | TeMatch (term, return, clauses, info) ->
+    let scrutinee = infer p xenv loc tsubst tenv jenv term in
+
+    List.iter (check_clause p xenv tsubst tenv jenv scrutinee return) clauses;
+
+    info := Some return;
+    return
+  | TeLoc (loc, term) -> infer p xenv loc tsubst tenv jenv term
 
 
 and check (* [check] expects... *)
@@ -91,7 +126,8 @@ and check (* [check] expects... *)
   match term with
   | TeLoc (loc, term) ->
     let inferred = infer p xenv loc tsubst tenv jenv term in
-    failwith "CHECK IS NOT COMPLETE YET!" (* do something here! *)
+    if not (TS.equal tsubst expected inferred) then
+      mismatch xenv loc expected inferred
   | _ ->
     (* out of luck! We run in degraded mode, location will be wrong!
         This should only happen on simplified terms. *)
