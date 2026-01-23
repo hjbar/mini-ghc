@@ -10,7 +10,7 @@ open Print
 
 let mismatch xenv loc expected inferred =
   Error.error [ loc ]
-    (sprintf "Type mismatch.\nExpected: %s\nInferred: %s"
+    (sprintf "Type mismatch.\nExpected: %s\nInferred: %s\n"
        (print_type xenv expected) (print_type xenv inferred) )
 
 
