@@ -72,7 +72,7 @@ end
      - when manipulating a [scoped] value, make sure to discharge
        these substitutions before producing [pre_fterm]s; and
      - when creating a [scoped] value, make sure to associate the
-       right substitutions to it 
+       right substitutions to it
  *)
 
 type 'a scoped = Scope of Subst.t * tsubst * 'a
@@ -110,6 +110,43 @@ let rec type_of_cont = function
   | CtxtApp (_, args) -> type_of_cont args
   | CtxtTyApp (_, args) -> type_of_cont args
   | CtxtMatch (_, args) -> type_of_cont args
+
+
+(* ------------------------------------------------------------------------- *)
+
+(* Utils functions for simplifying terms *)
+
+let is_CtxtApp = function
+  | CtxtApp _ -> true
+  | _ -> false
+
+
+let get_CtxtApp = function
+  | CtxtApp (Scope (subst, tsubst, (arg, info)), args) ->
+    (subst, tsubst, arg, info, args)
+  | _ -> assert false
+
+
+let is_CtxtTyApp = function
+  | CtxtTyApp _ -> true
+  | _ -> false
+
+
+let get_CtxtTyApp = function
+  | CtxtTyApp (Scope (subst, tsubst, (typ, info)), args) ->
+    (subst, tsubst, typ, info, args)
+  | _ -> assert false
+
+
+let is_CtxtMatch = function
+  | CtxtMatch _ -> true
+  | _ -> false
+
+
+let get_CtxtMatch = function
+  | CtxtMatch (Scope (subst, tsubst, (return, clauses, info)), args) ->
+    (subst, tsubst, return, clauses, info, args)
+  | _ -> assert false
 
 
 (* ------------------------------------------------------------------------- *)
@@ -159,8 +196,57 @@ and simplify1 (args : context) (Scope (subst, tsubst, term) : fterm scoped) :
     in
     simplify1 args (Scope (subst, tsubst, scrutinee))
   (* 2. Contract the context as much as possible *)
-  (*    rule (\beta), (\beta_\tau), (\case), etc. *)
-  | _ when false -> failwith "Simplify the context here!"
+  (* rule (\beta) *)
+  | TeAbs (x, _, body) when is_CtxtApp args ->
+    let subst_v, tsubst_v, v, _, args = get_CtxtApp args in
+
+    let v = simplify (Scope (subst_v, tsubst_v, v)) in
+    let subst = Subst.bind x v subst in
+
+    simplify1 args (Scope (subst, tsubst, body))
+  (* rule (\beta_\tau) *)
+  | TeTyAbs (a, body) when is_CtxtTyApp args ->
+    let _, tsubst_typ, typ, _, args = get_CtxtTyApp args in
+
+    let ty = Tsubst.apply tsubst_typ typ in
+    let tsubst = Tsubst.bind a ty tsubst in
+
+    simplify1 args (Scope (subst, tsubst, body))
+  (* rule (inline) + (drop) *)
+  | TeLet (x, term1, term2) ->
+    let v = simplify (Scope (subst, tsubst, term1)) in
+    let subst = Subst.bind x v subst in
+
+    simplify1 args (Scope (subst, tsubst, term2))
+  (* rule (case) *)
+  | TeData (dc, typs, terms, _) when is_CtxtMatch args ->
+    let subst', tsubst', _, clauses, _, args = get_CtxtMatch args in
+
+    let rec find_clause = function
+      | [] -> assert false
+      | Clause (PatData (_, dc', tyvars, tevars, _), body) :: clauses ->
+        if Atom.equal dc dc' then (tyvars, tevars, body)
+        else find_clause clauses
+    in
+    let tyvars, tevars, body = find_clause clauses in
+
+    let rec bind_terms subst = function
+      | [], [] -> subst
+      | x :: tevars, t :: terms ->
+        let t = simplify (Scope (subst, tsubst, t)) in
+        let subst = Subst.bind x t subst in
+        bind_terms subst (tevars, terms)
+      | _ -> assert false
+    in
+    let subst' = bind_terms subst' (tevars, terms) in
+
+    let tsubst' =
+      List.fold_left2
+        (fun tsubst tyvar typ -> Tsubst.bind tyvar typ tsubst)
+        tsubst' tyvars typs
+    in
+
+    simplify1 args (Scope (subst', tsubst', body))
   | _ ->
     (* 3. Structural rules *)
     let term = simplify2 (Scope (subst, tsubst, term)) in
@@ -207,6 +293,17 @@ and simplify_clause
   match clause with
   | Clause (pattern, term) ->
     let pattern = simplify_pattern pattern in
+
+    let subst =
+      match (scrutinee, pattern) with
+      | TeVar (x, _), PatData (_, dc, tyvars, tevars, _) ->
+        let typs = List.map (fun typ -> TyFreeVar typ) tyvars in
+        let args = List.map (fun tevar -> TeVar (tevar, reset ())) tevars in
+        let teData = TeData (dc, typs, args, reset ()) in
+        Subst.bind x teData subst
+      | _ -> subst
+    in
+
     let term = simplify (Scope (subst, tsubst, term)) in
     Clause (pattern, term)
 
