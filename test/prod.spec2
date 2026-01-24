@@ -1,0 +1,8 @@
+type pair a b
+data constructor Pair : forall a b. { a; b } -> pair a b
+program
+fun [a][b] (p : pair a b) : pair b a =
+  match p return pair b a with
+  | Pair [a_1_] [b_1_] { x; y } ->
+      Pair [b_1_] [a_1_] { y; x }
+  end
