@@ -152,7 +152,7 @@ let brackets_pvar env a = brackets (pvar env a)
 
 (* The pretty-printer for terms (below) is quite fancy because it reconstructs
    some of the syntactic sugar that the parser eliminates. This is done by
-   carrying a context top-down. 
+   carrying a context top-down.
 
    Eliminating syntactic sugar sometimes involves eliminating redundant
    information. If this information is in fact not redundant but inconsistent,
@@ -339,11 +339,14 @@ and pclause env = function
 
 (* Algebraic data types. *)
 
-let tyvar arity = Char.chr (Char.code 'a' - (arity - 1))
+let tyvar arity = Char.chr (Char.code 'a' + arity)
 
-let rec print_arity arity =
-  if arity = 0 then empty
-  else string " " ^^ char (tyvar arity) ^^ print_arity (arity - 1)
+let print_arity arity =
+  let rec loop cur arity =
+    if cur = arity then empty
+    else string " " ^^ char (tyvar cur) ^^ loop (cur + 1) arity
+  in
+  loop 0 arity
 
 
 let print_dc p env dc =
