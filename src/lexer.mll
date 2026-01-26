@@ -100,4 +100,3 @@ and comment openingp = parse
     { Error.error [ (openingp, lexeme_start_p lexbuf) ] "Unterminated comment." }
 | _
     { comment openingp lexbuf }
-

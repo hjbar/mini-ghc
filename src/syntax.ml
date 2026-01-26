@@ -21,6 +21,8 @@ let term_sort : sort = (0, "term")
 
 let type_sort : sort = (1, "type")
 
+let label_sort : sort = (2, "label")
+
 let data_sort : sort = (3, "data constructor")
 
 let typecon_sort : sort = (4, "type constructor")
@@ -89,8 +91,16 @@ type fterm =
   | SynTeTyAnnot of fterm * ftype (* (t : T) *)
   | SynTeMatch of fterm * ftype * clause list
     (* match t return T with clause ... clause end *)
-  | SynTeLoc of location * fterm
-(* t *)
+  | SynTeLoc of location * fterm (* t *)
+  | SynTeJoin of
+      identifier
+      * identifier list
+      * (identifier * ftype) list
+      * ftype
+      * fterm
+      * fterm (* join j [ a ... a ] (x : T) ... (x : T) : T = t in t *)
+  | SynTeJump of identifier * ftype list * fterm list * ftype
+(* jump j [ T ... T ] { t; ...; t } : T *)
 (* the parser generates [SynTeLoc] nodes to keep track of locations
 	 within the source code. *)
 

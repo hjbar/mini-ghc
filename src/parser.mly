@@ -87,6 +87,10 @@ term_variable:
 | id = IDENTIFIER
     { Identifier.mak term_sort id }
 
+label_variable:
+| id = IDENTIFIER
+    { Identifier.mak label_sort id }
+
 type_variable:
 | id = IDENTIFIER
     { Identifier.mak type_sort id }
@@ -248,6 +252,16 @@ term:
 | LET f = term_variable def = non_recursive_def IN t = loc(term)
     { SynTeLet (f, def, t) }
 
+| JUMP j = label_variable tys = multiple(actual_type_arguments) LBRACE args = semi(loc(term0)) RBRACE COLON return_typ = typ
+    { SynTeJump (j, tys, args, return_typ) }
+
+| JOIN j = label_variable
+  ty_vars = multiple(formal_type_arguments)
+  te_args = multiple(term_arguments)
+  COLON codomain = typ
+  EQ def = loc(term)
+  IN body = loc(term)
+    { SynTeJoin (j , ty_vars, te_args, codomain, def, body) }
 
 (* ------------------------------------------------------------------------- *)
 
@@ -281,4 +295,3 @@ signature_item:
 program:
 | ds = signature_item* PROGRAM t = loc(term) EOF
     { SynProg (ds, t) }
-
