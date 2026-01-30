@@ -252,9 +252,6 @@ term:
 | LET f = term_variable def = non_recursive_def IN t = loc(term)
     { SynTeLet (f, def, t) }
 
-| JUMP j = label_variable tys = multiple(actual_type_arguments) LBRACE args = semi(loc(term0)) RBRACE COLON return_typ = typ
-    { SynTeJump (j, tys, args, return_typ) }
-
 | JOIN j = label_variable
   ty_vars = multiple(formal_type_arguments)
   te_args = multiple(term_arguments)
@@ -262,6 +259,9 @@ term:
   EQ def = loc(term)
   IN body = loc(term)
     { SynTeJoin (j , ty_vars, te_args, codomain, def, body) }
+
+| JUMP j = label_variable tys = multiple(actual_type_arguments) LBRACE args = semi(loc(term0)) RBRACE COLON return_typ = typ
+    { SynTeJump (j, tys, args, return_typ) }
 
 (* ------------------------------------------------------------------------- *)
 

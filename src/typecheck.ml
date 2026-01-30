@@ -105,6 +105,23 @@ let rec infer (* [infer] expects... *)
     info := Some return;
     return
   | TeLoc (loc, term) -> infer p xenv loc tsubst tenv jenv term
+  | TeJoin (j, typs, vars, expected, term1, term2) ->
+    let inside_tenv = binds vars tenv in
+    let inside_xenv = Export.sbind xenv typs in
+    check p inside_xenv tsubst inside_tenv jenv term1 expected;
+
+    let vars_typs = List.map snd vars in
+    let jenv = jbind j typs vars_typs jenv in
+    check p xenv tsubst tenv jenv term2 expected;
+
+    expected
+  | TeJump (j, typs, terms, expected) ->
+    let typ_vars, arg_typs = lookup_label xenv loc jenv j typs terms in
+
+    let tsubst = TS.binds (List.combine typ_vars typs) tsubst in
+    List.iter2 (check p xenv tsubst tenv jenv) terms arg_typs;
+
+    expected
 
 
 and check (* [check] expects... *)
@@ -182,6 +199,27 @@ and deconstruct_data_arrow xenv loc dc dcty found =
     arity_mismatch xenv loc "data constructor" dc "term" expected found;
 
   (domains, codomain)
+
+
+(* ------------------------------------------------------------------------- *)
+
+(* [lookup_label xenv loc jenv typs terms] finds the formal types and
+   the argument types associated with the label [j] and checks arity
+   with [typs] and [terms] to prevent mismatch *)
+and lookup_label xenv loc jenv j typs terms =
+  let typ_vars, arg_typs = Types.jlookup j jenv in
+
+  let expected = List.length typ_vars in
+  let found = List.length typs in
+  if expected <> found then
+    arity_mismatch xenv loc "label" j "type" expected found;
+
+  let expected = List.length arg_typs in
+  let found = List.length terms in
+  if expected <> found then
+    arity_mismatch xenv loc "label" j "term" expected found;
+
+  (typ_vars, arg_typs)
 
 
 (* ------------------------------------------------------------------------- *)
@@ -265,3 +303,5 @@ let rec type_of (term : fterm) : ftype =
   | TeMatch (_, ty, _, _) -> ty
   | TeTyAnnot (_, ty) -> ty
   | TeLoc (_, term) -> type_of term
+  | TeJoin (_, _, _, ty, _, _) -> ty
+  | TeJump (_, _, _, ty) -> ty

@@ -40,6 +40,10 @@ echo: $(ECHO)
 %.typefail: %.f force
 	! $(JOUJOU) $< &> /dev/null
 
+test1-success: $(TYPECHECK)
+
+test1-fail: $(TYPEFAIL)
+
 test1: $(TYPECHECK) $(TYPEFAIL)
 
 ################################################################
@@ -68,6 +72,10 @@ test2: $(OPTIMIZE2)
 	$(JOUJOU) --optimize --case-of-case $< > $*.opt3
 	@$(DIFF) $*.opt3 $*.spec3; true
 
+test3a-success: $(TYPECHECKJ) $(TYPECHECK)
+
+test3a-fail: $(TYPEFAILJ)
+
 test3a: $(TYPECHECKJ) $(TYPEFAILJ) $(TYPECHECK) $(TYPECHECK)
 
 test3b: $(OPTIMIZE3)
@@ -76,6 +84,10 @@ test3: test3a test3b
 
 ################################################################
 # Global tests
+
+typecheck-success: test1-success test3a-success
+
+typecheck-fail: test1-fail test3a-fail
 
 typecheck: test1 test3a
 

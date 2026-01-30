@@ -90,10 +90,23 @@ type ('a, 'b, 'c, 'd, 'e, 'f) _fterm =
       * 'e
   (* typechecker meta-data *)
   (* match t return T with clause ... clause end *)
-  | TeLoc of location * ('a, 'b, 'c, 'd, 'e, 'f) _fterm
-(* t *)
-(* the parser generates [TeLoc] nodes to keep track of locations
-	 within the source code. *)
+  | TeLoc of location * ('a, 'b, 'c, 'd, 'e, 'f) _fterm (* t *)
+  | TeJoin of
+      atom (* label j *)
+      * atom list (* [ a ... a ] *)
+      * (atom * ftype) list (* (x : T) ... (x : T) *)
+      * ftype (* T *)
+      * ('a, 'b, 'c, 'd, 'e, 'f) _fterm (* t *)
+      * ('a, 'b, 'c, 'd, 'e, 'f) _fterm (* t *)
+  (* join j [ a ... a ] (x : T) ... (x : T) : T = t in t *)
+  | TeJump of
+      atom (* label j *)
+      * ftype list (* [ T ... T ] *)
+      * ('a, 'b, 'c, 'd, 'e, 'f) _fterm list (* { t; ...; t } *)
+      * ftype
+(* T *)
+(* jump j [ T ... T ] { t; ...; t } : T *)
+(* the parser generates [TeLoc] nodes to keep track of locations within the source code. *)
 
 and ('a, 'b, 'c, 'd, 'e, 'f) _clause =
   | Clause of 'f _pattern * ('a, 'b, 'c, 'd, 'e, 'f) _fterm

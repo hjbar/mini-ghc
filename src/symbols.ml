@@ -28,6 +28,8 @@ let rec fv = function
   | TeData (_, _, fields, _) -> union_map fv fields
   | TeMatch (term, _, clauses, _) ->
     AtomSet.union (fv term) (union_map fv_clause clauses)
+  | TeJoin (_, _, _, _, term1, term2) -> AtomSet.union (fv term1) (fv term2)
+  | TeJump (_, _, fields, _) -> union_map fv fields
 
 
 and fv_clause = function

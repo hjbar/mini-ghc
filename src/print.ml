@@ -233,6 +233,28 @@ and pterm env term =
       definition
         (string "let" ^^ line ^^ pvar env x ^^ equal)
         term1 (pterm env term2)
+    | TeJoin (j, typs, vars, ftype, term1, term2) ->
+      let env = Export.bind env j in
+
+      definition
+        (string "join" ^^ line ^^ pvar env j)
+        (pdef ~is_fun:false env typs vars (Some ftype) term1)
+        (pterm env term2)
+    | TeJump (j, typs, terms, ftype) ->
+      let terms = pfields (pterm0 env) terms in
+      let typs = concat_map (brackets_pty env) typs in
+
+      lparen
+      ^^ string "jump"
+      ^^ space
+      ^^ pvar env j
+      ^^ space
+      ^^ typs
+      ^^ space
+      ^^ terms
+      ^^ colon
+      ^^ pty env ftype
+      ^^ rparen
     | _ -> pterm1 env term )
 
 
@@ -294,13 +316,14 @@ and instantiate_oty oty a =
 
 (* Terms. Definitions. *)
 
-and pdef env tyvars tevars ocodomain body =
+and pdef ?(is_fun = true) env tyvars tevars ocodomain body =
   let env = Export.sbind env tyvars in
   let env = Export.sbind env (List.map fst tevars) in
   heading
     ( (* exploit the fact that [fix] can always be replaced by [fun] *)
-      lambda
+      (if is_fun then lambda ^^ space else empty)
     ^^ concat_map (ptype_argument env) tyvars
+    ^^ space
     ^^ concat_map (pterm_argument env) tevars
     ^^ optional (fun ty -> colon ^^ pty env ty) ocodomain
     ^^ equal
@@ -308,11 +331,9 @@ and pdef env tyvars tevars ocodomain body =
     (pterm env body)
 
 
-and ptype_argument env tyvar = space ^^ brackets_pvar env tyvar
+and ptype_argument env tyvar = brackets_pvar env tyvar
 
-and pterm_argument env (x, ty) =
-  space ^^ parens (pvar env x ^^ colon ^^ pty env ty)
-
+and pterm_argument env (x, ty) = parens (pvar env x ^^ colon ^^ pty env ty)
 
 (* ------------------------------------------------------------------------- *)
 

@@ -14,8 +14,8 @@ open Error
 (* Sorts. *)
 
 (* We have four sorts of identifiers: term variables, type variables,
-   data constructors, and type constructors. Each sort defines an
-   independent namespace. *)
+   label variables, data constructors, and type constructors. Each sort
+   defines an independent namespace. *)
 
 let term_sort : sort = (0, "term")
 
@@ -101,8 +101,7 @@ type fterm =
       * fterm (* join j [ a ... a ] (x : T) ... (x : T) : T = t in t *)
   | SynTeJump of identifier * ftype list * fterm list * ftype
 (* jump j [ T ... T ] { t; ...; t } : T *)
-(* the parser generates [SynTeLoc] nodes to keep track of locations
-	 within the source code. *)
+(* the parser generates [SynTeLoc] nodes to keep track of locations within the source code. *)
 
 and clause = SynClause of pattern * fterm
 (* p -> t *)
