@@ -134,7 +134,8 @@ and pforall env qs = function
   | ty ->
     nest 2
       ( forall
-      ^^ concat_map (fun a -> space ^^ pvar env a) (List.rev qs)
+      ^^ space
+      ^^ separate_map space (pvar env) (List.rev qs)
       ^^ dot
       ^^ line
       ^^ pty env ty )
@@ -322,9 +323,9 @@ and pdef ?(is_fun = true) env tyvars tevars ocodomain body =
   heading
     ( (* exploit the fact that [fix] can always be replaced by [fun] *)
       (if is_fun then lambda ^^ space else empty)
-    ^^ concat_map (ptype_argument env) tyvars
+    ^^ separate_map space (ptype_argument env) tyvars
     ^^ space
-    ^^ concat_map (pterm_argument env) tevars
+    ^^ separate_map space (pterm_argument env) tevars
     ^^ optional (fun ty -> colon ^^ pty env ty) ocodomain
     ^^ equal
     ^^ space )

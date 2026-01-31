@@ -35,6 +35,9 @@ test3a-fail: all
 test3a: all
 	@JOUJOU="../src/joujou.exe" $(MAKE) -C ../test test3a
 
+test3b: all
+	@JOUJOU="../src/joujou.exe" $(MAKE) -C ../test test3b
+
 test3: all
 	@JOUJOU="../src/joujou.exe" $(MAKE) -C ../test test3
 
