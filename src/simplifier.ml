@@ -149,6 +149,8 @@ let get_CtxtMatch = function
   | _ -> assert false
 
 
+let perform_caseofcase ctx = !optimize_caseofcase && is_CtxtMatch ctx
+
 (* ------------------------------------------------------------------------- *)
 
 (* Simplification routine. *)
@@ -190,7 +192,8 @@ and simplify1 (args : context) (Scope (subst, tsubst, term) : fterm scoped) :
   | TeTyApp (term1, type2, info) ->
     let args = CtxtTyApp (Scope (subst, tsubst, (type2, info)), args) in
     simplify1 args (Scope (subst, tsubst, term1))
-  | TeMatch (scrutinee, result, clauses, info) ->
+  | TeMatch (scrutinee, result, clauses, info)
+    when not (perform_caseofcase args) ->
     let args =
       CtxtMatch (Scope (subst, tsubst, (result, clauses, info)), args)
     in
@@ -247,6 +250,39 @@ and simplify1 (args : context) (Scope (subst, tsubst, term) : fterm scoped) :
     in
 
     simplify1 args (Scope (subst', tsubst', body))
+  (* rule (case-of-case) *)
+  | TeMatch (scrutinee, result, clauses, info) when perform_caseofcase args ->
+    let subst', tsubst', result', clauses', info', args = get_CtxtMatch args in
+
+    let j = Atom.fresh (Identifier.mk "j" Syntax.label_sort) in
+    let x = Atom.fresh (Identifier.mk "x" Syntax.term_sort) in
+
+    let result = Tsubst.apply tsubst result in
+    let result' = Tsubst.apply tsubst' result' in
+
+    let scrutinee = simplify (Scope (subst, tsubst, scrutinee)) in
+    let clauses =
+      List.map
+        (fun (Clause (pattern, term)) ->
+          let y = Atom.fresh (Identifier.mk "y" Syntax.term_sort) in
+          let term = simplify (Scope (subst, tsubst, term)) in
+          let jump = TeJump (j, [], [ TeVar (y, reset ()) ], result') in
+          Clause (simplify_pattern pattern, TeLet (y, term, jump)) )
+        clauses
+    in
+    let match_ = TeMatch (scrutinee, result', clauses, reset ()) in
+
+    let join = TeMatch (TeVar (x, result), result', clauses', info') in
+    let join = simplify (Scope (subst', tsubst', join)) in
+    let join = TeJoin (j, [], [ (x, result) ], result', join, match_) in
+
+    apply join args
+  (* rule (abort) *)
+  | TeJump (j, typs, terms, _) ->
+    let typs = List.map (Tsubst.apply tsubst) typs in
+    let terms = List.map (fun t -> simplify (Scope (subst, tsubst, t))) terms in
+
+    TeJump (j, typs, terms, type_of_cont args)
   | _ ->
     (* 3. Structural rules *)
     let term = simplify2 (Scope (subst, tsubst, term)) in
@@ -280,6 +316,23 @@ and simplify2 (Scope (subst, tsubst, term) : fterm scoped) : pre_fterm =
     let local_simplify t = simplify (Scope (subst, tsubst, t)) in
     let fields = List.map local_simplify fields in
     TeData (dc, tys, fields, reset ())
+  | TeJoin (j, typs, vars, expected, term1, term2) ->
+    let vars =
+      List.map (fun (x, ftype) -> (x, Tsubst.apply tsubst ftype)) vars
+    in
+    let expected = Tsubst.apply tsubst expected in
+
+    let term1 = simplify (Scope (subst, tsubst, term1)) in
+    let term2 = simplify (Scope (subst, tsubst, term2)) in
+
+    TeJoin (j, typs, vars, expected, term1, term2)
+  | TeJump (j, typs, terms, expected) ->
+    let typs = List.map (Tsubst.apply tsubst) typs in
+    let expected = Tsubst.apply tsubst expected in
+
+    let terms = List.map (fun t -> simplify (Scope (subst, tsubst, t))) terms in
+
+    TeJump (j, typs, terms, expected)
   | _ -> assert false
 
 

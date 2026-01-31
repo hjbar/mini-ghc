@@ -8,10 +8,8 @@ type bool
 data constructor True : {} -> bool
 data constructor False : {} -> bool
 program
-fun [a] (xs : list a) : bool = 
-  (* Missed opportunity! *)
-  (* -> inline j followed by rule (case) *)
-  join j (x : maybe a) : bool = 
+fun [a] (xs : list a) : bool =
+  join j (x : maybe a) : bool =
     match x return bool with
     | Nothing [_] {} ->
         False {}

@@ -6,9 +6,7 @@ type bool
 data constructor True : {} -> bool
 data constructor False : {} -> bool
 program
-fun (v : t) (big : bool) : bool = 
-  (* Missed opportunity! *)
-  (* -> float the join out of the match *)
+fun (v : t) (big : bool) : bool =
   match join j (x : bool) : bool =  big in
   match v return bool with
   | A {} ->

@@ -196,6 +196,14 @@ let rec pterm0 env = function
     ^^ kwith
     ^^ concat_map (pclause env) clauses
     ^^ kend
+  | TeJump (j, typs, terms, ftype) ->
+    let j = pvar env j in
+    let terms = pfields (pterm0 env) terms in
+    let typs = concat_map (brackets_pty env) typs in
+    let ftype = pty env ftype in
+
+    parens
+      (string "jump" ^^ space ^^ j ^^ typs ^^ space ^^ terms ^^ colon ^^ ftype)
   | term -> parens (pterm env term)
 
 
@@ -236,26 +244,19 @@ and pterm env term =
         term1 (pterm env term2)
     | TeJoin (j, typs, vars, ftype, term1, term2) ->
       let env = Export.bind env j in
+      let env = Export.sbind env typs in
+      let env = Export.sbind env (List.map fst vars) in
+
+      let j = pvar env j in
+      let typs = concat_map (ptype_argument env) typs in
+      let vars = concat_map (pterm_argument env) vars in
+      let ftype = pty env ftype in
+      let term1 = pterm env term1 in
+      let term2 = pterm env term2 in
 
       definition
-        (string "join" ^^ line ^^ pvar env j)
-        (pdef ~is_fun:false env typs vars (Some ftype) term1)
-        (pterm env term2)
-    | TeJump (j, typs, terms, ftype) ->
-      let terms = pfields (pterm0 env) terms in
-      let typs = concat_map (brackets_pty env) typs in
-
-      lparen
-      ^^ string "jump"
-      ^^ space
-      ^^ pvar env j
-      ^^ space
-      ^^ typs
-      ^^ space
-      ^^ terms
-      ^^ colon
-      ^^ pty env ftype
-      ^^ rparen
+        (string "join" ^^ space ^^ j ^^ typs ^^ vars ^^ colon ^^ ftype ^^ equal)
+        term1 term2
     | _ -> pterm1 env term )
 
 
@@ -322,19 +323,20 @@ and pdef ?(is_fun = true) env tyvars tevars ocodomain body =
   let env = Export.sbind env (List.map fst tevars) in
   heading
     ( (* exploit the fact that [fix] can always be replaced by [fun] *)
-      (if is_fun then lambda ^^ space else empty)
-    ^^ separate_map space (ptype_argument env) tyvars
-    ^^ space
-    ^^ separate_map space (pterm_argument env) tevars
+      lambda
+    ^^ concat_map (ptype_argument env) tyvars
+    ^^ concat_map (pterm_argument env) tevars
     ^^ optional (fun ty -> colon ^^ pty env ty) ocodomain
     ^^ equal
     ^^ space )
     (pterm env body)
 
 
-and ptype_argument env tyvar = brackets_pvar env tyvar
+and ptype_argument env tyvar = space ^^ brackets_pvar env tyvar
 
-and pterm_argument env (x, ty) = parens (pvar env x ^^ colon ^^ pty env ty)
+and pterm_argument env (x, ty) =
+  space ^^ parens (pvar env x ^^ colon ^^ pty env ty)
+
 
 (* ------------------------------------------------------------------------- *)
 

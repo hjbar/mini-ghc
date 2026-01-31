@@ -1,0 +1,61 @@
+(* ===== preserve2.spec3 ===== *)
+
+type t
+data constructor C : {} -> t
+data constructor B : {} -> t
+data constructor A : {} -> t
+type bool
+data constructor True : {} -> bool
+data constructor False : {} -> bool
+program
+fun (v : t) (big : bool) : bool =
+  (* Missed opportunity! *)
+  (* -> float the join out of the match *)
+  match join j (x : bool) : bool =  big in
+  match v return bool with
+  | A {} ->
+      (jump j {True {}} : bool)
+  | B {} ->
+      (jump j {False {}} : bool)
+  | C {} ->
+      True {}
+  end return bool with
+  | True {} ->
+      False {}
+  | False {} ->
+      True {}
+  end
+
+(* ===== *)
+
+(* ===== caseofcase.spec3 ===== *)
+
+type maybe a
+data constructor Nothing : forall a. {} -> maybe a
+data constructor Just : forall a. { a } -> maybe a
+type list a
+data constructor Nil : forall a. {} -> list a
+data constructor Cons : forall a. { a; list a } -> list a
+type bool
+data constructor True : {} -> bool
+data constructor False : {} -> bool
+program
+fun [a] (xs : list a) : bool =
+  (* Missed opportunity! *)
+  (* -> inline j followed by rule (case) *)
+  join j (x : maybe a) : bool =
+    match x return bool with
+    | Nothing [_] {} ->
+        False {}
+    | Just [_] { _ } ->
+        True {}
+    end
+  in
+  match xs return bool with
+  | Nil [a_1_] {} ->
+      (jump j { Nothing [a_1_] {} } : bool)
+  | Cons [a_1_] { x_1_; _ } ->
+      (jump j { Just [a_1_] { x_1_ } } : bool)
+  end
+
+(* ===== *)
