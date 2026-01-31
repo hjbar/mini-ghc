@@ -110,6 +110,7 @@ let rec infer (* [infer] expects... *)
     let inside_xenv = Export.sbind xenv typs in
     check p inside_xenv tsubst inside_tenv jenv term1 expected;
 
+    let xenv = Export.bind xenv j in
     let vars_typs = List.map snd vars in
     let jenv = jbind j typs vars_typs jenv in
     check p xenv tsubst tenv jenv term2 expected;
@@ -118,7 +119,9 @@ let rec infer (* [infer] expects... *)
   | TeJump (j, typs, terms, expected) ->
     let typ_vars, arg_typs = lookup_label xenv loc jenv j typs terms in
 
+    let xenv = Export.sbind xenv typ_vars in
     let tsubst = TS.binds (List.combine typ_vars typs) tsubst in
+
     List.iter2 (check p xenv tsubst tenv jenv) terms arg_typs;
 
     expected
@@ -243,6 +246,15 @@ and check_clause p xenv tsubst tenv jenv scrutinee result = function
     let domains, codomain =
       deconstruct_data_arrow xenv loc dc dcty (List.length tevars)
     in
+
+    (* Check that the type of the codomain is compatible with the type
+       of the scrutinee *)
+    begin match (codomain, scrutinee) with
+    | TyCon (tc1, _), TyCon (tc2, _) when Atom.equal tc1 tc2 -> ()
+    | TyCon (tc1, _), TyCon (tc2, _) when not (Atom.equal tc1 tc2) ->
+      typecon_mismatch xenv loc dc tc2 tc1
+    | _ -> assert false
+    end;
 
     (* Bind the term variables. *)
     let tenv = binds (List.combine tevars domains) tenv in
