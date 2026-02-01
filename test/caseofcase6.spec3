@@ -1,0 +1,31 @@
+type t4
+data constructor H : {} -> t4
+data constructor G : {} -> t4
+type t3
+data constructor F : {} -> t3
+data constructor E : {} -> t3
+type t2
+data constructor D : {} -> t2
+data constructor C : {} -> t2
+type t1
+data constructor B : {} -> t1
+data constructor A : {} -> t1
+program
+fun (x : t1) : t4 =
+  join j (x_1_ : t3) : t4 =
+    match x_1_ return t4 with | E {} -> G {} | F {} -> H {} end
+  in
+  join j_1_ (x_2_ : t2) : t4 =
+    match x_2_ return t4 with
+    | C {} ->
+        (jump j { E {} } : t4)
+    | D {} ->
+        (jump j { F {} } : t4)
+    end
+  in
+  match x return t4 with
+  | A {} ->
+      (jump j_1_ { C {} } : t4)
+  | B {} ->
+      (jump j_1_ { D {} } : t4)
+  end

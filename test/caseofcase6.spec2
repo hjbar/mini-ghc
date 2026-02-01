@@ -1,0 +1,26 @@
+type t4
+data constructor H : {} -> t4
+data constructor G : {} -> t4
+type t3
+data constructor F : {} -> t3
+data constructor E : {} -> t3
+type t2
+data constructor D : {} -> t2
+data constructor C : {} -> t2
+type t1
+data constructor B : {} -> t1
+data constructor A : {} -> t1
+program
+fun (x : t1) : t4 =
+  match match match x return t2 with | A {} -> C {} | B {} -> D {} end return
+  t3 with
+  | C {} ->
+      E {}
+  | D {} ->
+      F {}
+  end return t4 with
+  | E {} ->
+      G {}
+  | F {} ->
+      H {}
+  end
