@@ -17,6 +17,9 @@ TYPEFAILJ=$(BADJ:.fj=.typefailj)
 OPTIMIZE2=$(SRC:.f=.opt2)
 OPTIMIZE3=$(SRCJ:.fj=.opt3) $(SRC:.f=.opt3)
 
+ERASE=$(SRC:.f=.erase)
+ERASEJ=$(SRCJ:.fj=.erasej)
+
 JOUJOU ?= ../src/joujou.exe
 
 ################################################################
@@ -100,8 +103,23 @@ force:
 	@true
 
 clean:
-	rm -f *.opt2 *.opt3
+	rm -f *.opt2 *.opt3 *.eopt
 
 ################################################################
+# Test Erase
 
-# ADD YOUR TEST HANDLERS HERE
+%.erase: %.f force
+	$(JOUJOU) --optimize --case-of-case --erase $< > $*.eopt
+	@$(DIFF) $*.eopt $*.espec; true
+
+%.erasej: %.fj force
+	$(JOUJOU) --optimize --case-of-case --erase $< > $*.eopt
+	@$(DIFF) $*.eopt $*.espec; true
+
+test-erase: $(ERASE)
+
+test-erasej: $(ERASEJ)
+
+erase: test-erase test-erasej
+
+################################################################

@@ -8,18 +8,10 @@ type bool
 data constructor True : {} -> bool
 data constructor False : {} -> bool
 program
-fun [a] (xs : list a) : bool =
-  join j (x : maybe a) : bool =
-    match x return bool with
-    | Nothing [_] {} ->
-        False {}
-    | Just [_] { _ } ->
-        True {}
-    end
-  in
+fun [a] (xs : list a) =
   match xs return bool with
-  | Nil [a_1_] {} ->
-      (jump j { Nothing [a_1_] {} } : bool)
+  | Nil [_] {} ->
+      False {}
   | Cons [a_1_] { x; _ } ->
-      (jump j { Just [a_1_] { x } } : bool)
+      True {}
   end

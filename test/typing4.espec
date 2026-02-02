@@ -1,0 +1,26 @@
+type t
+data constructor C : {} -> t
+data constructor B : {} -> t
+data constructor A : {} -> t
+type bool
+data constructor True : {} -> bool
+data constructor False : {} -> bool
+program
+fun (v : t) (big : bool) : bool =
+  let j =
+    fun (x : bool) : bool =
+      match big return bool with
+      | True {} ->
+          False {}
+      | False {} ->
+          True {}
+      end
+  in
+  match v return bool with
+  | A {} ->
+      (j True {} : bool)
+  | B {} ->
+      (j False {} : bool)
+  | C {} ->
+      False {}
+  end

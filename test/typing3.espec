@@ -1,0 +1,19 @@
+type t
+data constructor C : {} -> t
+data constructor B : {} -> t
+data constructor A : {} -> t
+type char
+type bool
+data constructor True : {} -> bool
+data constructor False : {} -> bool
+program
+fun (x : char) (v : t) (rhs : char -> char) : char =
+  let j = fun (b : bool) : char =  rhs x in
+  match v return char with
+  | A {} ->
+      (j True {} : char)
+  | B {} ->
+      (j False {} : char)
+  | C {} ->
+      x
+  end

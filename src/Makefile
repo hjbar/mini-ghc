@@ -52,3 +52,6 @@ typecheck: all
 
 optimize: all
 	@JOUJOU="../src/joujou.exe" $(MAKE) -C ../test optimize
+
+erase: all
+	@JOUJOU="../src/joujou.exe" $(MAKE) -C ../test erase

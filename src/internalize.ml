@@ -102,12 +102,12 @@ let ischeme tctable env : Syntax.scheme -> Types.ftype = function
 (* [iterm] converts a term from external syntax into internal syntax. *)
 
 let rec iterm tctable env = function
-  | SynTeVar id -> TeVar (Import.resolve env id, ref None)
+  | SynTeVar id -> TeVar (Import.resolve env id, reset ())
   | SynTeAbs (x, ftype, term) ->
     let x, env = bind env x in
     TeAbs (x, itype tctable env ftype, iterm tctable env term)
   | SynTeApp (term1, term2) ->
-    TeApp (iterm tctable env term1, iterm tctable env term2, ref None)
+    TeApp (iterm tctable env term1, iterm tctable env term2, reset ())
   | SynTeLet (x, term1, term2) ->
     let x, env' = bind env x in
     TeLet (x, iterm tctable env term1, iterm tctable env' term2)
@@ -115,20 +115,20 @@ let rec iterm tctable env = function
     let a, env = bind env a in
     TeTyAbs (a, iterm tctable env term)
   | SynTeTyApp (term, ftype) ->
-    TeTyApp (iterm tctable env term, itype tctable env ftype, ref None)
+    TeTyApp (iterm tctable env term, itype tctable env ftype, reset ())
   | SynTeData (id, tys, fields) ->
     TeData
       ( Import.resolve env id,
         itypes tctable env tys,
         iterms tctable env fields,
-        ref None )
+        reset () )
   | SynTeTyAnnot (t, ty) -> TeTyAnnot (iterm tctable env t, itype tctable env ty)
   | SynTeMatch (t, ty, clauses) ->
     TeMatch
       ( iterm tctable env t,
         itype tctable env ty,
         iclauses tctable env clauses,
-        ref None )
+        reset () )
   | SynTeLoc (loc, t) -> TeLoc (loc, iterm tctable env t)
   | SynTeJoin (x, typs, vars, ftype, term1, term2) ->
     let x, env' = bind env x in
@@ -169,7 +169,7 @@ and ipattern env = function
   | SynPatData (loc, d, tyvars, fields) ->
     let env, tyvars = Import.bind_sequentially env tyvars in
     let env, fields = Import.bind_sequentially env fields in
-    (PatData (loc, Import.resolve env d, tyvars, fields, ref None), env)
+    (PatData (loc, Import.resolve env d, tyvars, fields, reset ()), env)
 
 
 (* ------------------------------------------------------------------------- *)

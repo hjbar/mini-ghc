@@ -11,6 +11,8 @@ let please_echo = ref false
 
 let please_optimize = ref false
 
+let please_erase = ref false
+
 let usage = sprintf "Usage: %s <options> <filename>\n" Sys.argv.(0)
 
 let () =
@@ -26,6 +28,10 @@ let () =
          ( "--case-of-case",
            Arg.Set Simplifier.optimize_caseofcase,
            " Enable case-of-case optimization" );
+         ( "--erase",
+           Arg.Set please_erase,
+           " Display the erased program if it was optimized with case-of-case"
+         );
        ] )
     (fun name -> filename := Some name)
     usage
@@ -72,6 +78,12 @@ let simplify filename prog =
   if !please_optimize then Simplifier.program filename prog else prog
 
 
+let erase prog =
+  if !please_optimize && !Simplifier.optimize_caseofcase && !please_erase then
+    Eraser.program prog
+  else prog
+
+
 let output prog = Printf.printf "%s" (print_program prog)
 
 let process filename =
@@ -82,6 +94,8 @@ let process filename =
   |> dump "Internalized" print_program
   |> simplify filename
   |> dump "Simplified" print_program
+  |> erase
+  |> dump "Erased" print_program
   |> output
 
 

@@ -1,0 +1,5 @@
+type maybe a
+data constructor Nothing : forall a. {} -> maybe a
+data constructor Just : forall a. { a } -> maybe a
+program
+fun [c] (v : c) : maybe c = Nothing [c] {}

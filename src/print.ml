@@ -196,14 +196,6 @@ let rec pterm0 env = function
     ^^ kwith
     ^^ concat_map (pclause env) clauses
     ^^ kend
-  | TeJump (j, typs, terms, ftype) ->
-    let j = pvar env j in
-    let terms = pfields (pterm0 env) terms in
-    let typs = concat_map (brackets_pty env) typs in
-    let ftype = pty env ftype in
-
-    parens
-      (string "jump" ^^ space ^^ j ^^ typs ^^ space ^^ terms ^^ colon ^^ ftype)
   | term -> parens (pterm env term)
 
 
@@ -244,6 +236,7 @@ and pterm env term =
         term1 (pterm env term2)
     | TeJoin (j, typs, vars, ftype, term1, term2) ->
       let env = Export.bind env j in
+      let outside_env = env in
       let env = Export.sbind env typs in
       let env = Export.sbind env (List.map fst vars) in
 
@@ -252,11 +245,19 @@ and pterm env term =
       let vars = concat_map (pterm_argument env) vars in
       let ftype = pty env ftype in
       let term1 = pterm env term1 in
-      let term2 = pterm env term2 in
+      let term2 = pterm outside_env term2 in
 
       definition
         (string "join" ^^ space ^^ j ^^ typs ^^ vars ^^ colon ^^ ftype ^^ equal)
         term1 term2
+    | TeJump (j, typs, terms, ftype) ->
+      let j = pvar env j in
+      let terms = pfields (pterm0 env) terms in
+      let typs = concat_map (brackets_pty env) typs in
+      let ftype = pty env ftype in
+
+      parens
+        (string "jump" ^^ space ^^ j ^^ typs ^^ space ^^ terms ^^ colon ^^ ftype)
     | _ -> pterm1 env term )
 
 

@@ -7,17 +7,18 @@ data constructor Cons : forall a. { a; list a } -> list a
 program
 fun [a] [b] [c] (v : list a) (e1 : maybe b) (e2 : a -> list a -> maybe b) (big1 :
   c) (big2 : b -> c) : c =
-  join j (x : maybe b) : c =
-    match x return c with
-    | Nothing [b_1_] {} ->
-        big1
-    | Just [b_1_] { x_1_ } ->
-        big2 x_1_
-    end
+  let j =
+    fun (x : maybe b) : c =
+      match x return c with
+      | Nothing [b_1_] {} ->
+          big1
+      | Just [b_1_] { x_1_ } ->
+          big2 x_1_
+      end
   in
   match v return c with
   | Nil [a_1_] {} ->
-      (jump j { e1 } : c)
+      (j e1 : c)
   | Cons [a_1_] { x; xs } ->
-      (jump j { (e2 x xs) } : c)
+      (j (e2 x xs) : c)
   end

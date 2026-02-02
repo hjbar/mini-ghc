@@ -12,20 +12,22 @@ data constructor B : {} -> t1
 data constructor A : {} -> t1
 program
 fun (x : t1) : t4 =
-  join j (x_1_ : t3) : t4 =
-    match x_1_ return t4 with | E {} -> G {} | F {} -> H {} end
+  let j =
+    fun (x_1_ : t3) : t4 =
+      match x_1_ return t4 with | E {} -> G {} | F {} -> H {} end
   in
-  join j_1_ (x_1_ : t2) : t4 =
-    match x_1_ return t4 with
-    | C {} ->
-        (jump j { E {} } : t4)
-    | D {} ->
-        (jump j { F {} } : t4)
-    end
+  let j_1_ =
+    fun (x_1_ : t2) : t4 =
+      match x_1_ return t4 with
+      | C {} ->
+          (j E {} : t4)
+      | D {} ->
+          (j F {} : t4)
+      end
   in
   match x return t4 with
   | A {} ->
-      (jump j_1_ { C {} } : t4)
+      (j_1_ C {} : t4)
   | B {} ->
-      (jump j_1_ { D {} } : t4)
+      (j_1_ D {} : t4)
   end
