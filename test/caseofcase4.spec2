@@ -6,7 +6,7 @@ data constructor True : {} -> bool
 data constructor False : {} -> bool
 program
 fun [a] [b] [c] (b : bool) (e1 : list b) (e2 : list b) (big1 : c) (big2 : b ->
-  list b -> c) : c = 
+  list b -> c) : c =
   match match b return list b with | True {} -> e1 | False {} -> e2 end return
   c with
   | Nil [_] {} ->

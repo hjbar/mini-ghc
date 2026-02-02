@@ -5,4 +5,3 @@ rule chop = parse
     { Some prefix }
 | _* eof
     { None }
-

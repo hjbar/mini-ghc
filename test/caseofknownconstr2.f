@@ -11,7 +11,7 @@ data constructor Nil : forall a. {} -> list a
 data constructor Cons : forall a. { a ; list a } -> list a
 
 program
-fun [a] (xs : list a) = 
+fun [a] (xs : list a) =
   match xs return bool with
   | Nil [_] {} ->
      False {}

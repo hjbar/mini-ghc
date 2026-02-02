@@ -6,7 +6,7 @@ data constructor Nil : forall a. {} -> list a
 data constructor Cons : forall a. { a; list a } -> list a
 program
 fun [a] [b] [c] (v : list a) (e1 : maybe b) (e2 : a -> list a -> maybe b) (big1 :
-  c) (big2 : b -> c) : c = 
+  c) (big2 : b -> c) : c =
   match match v return maybe b with
   | Nil [a_1_] {} ->
       e1

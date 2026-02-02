@@ -6,7 +6,7 @@ type bool
 data constructor True : {} -> bool
 data constructor False : {} -> bool
 program
-fun (v : t) (big : bool -> bool) : bool = 
+fun (v : t) (big : bool -> bool) : bool =
   match match v return bool with
   | A {} ->
       (big True {} : bool)

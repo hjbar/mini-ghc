@@ -6,5 +6,5 @@ type bool
 data constructor True : {} -> bool
 data constructor False : {} -> bool
 program
-fun (plus : int -> int -> int) : int = 
+fun (plus : int -> int -> int) : int =
   join j (x : int) : int =  plus x One {} in (jump j { Two {} } : int)

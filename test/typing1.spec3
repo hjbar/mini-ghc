@@ -7,7 +7,7 @@ type bool
 data constructor True : {} -> bool
 data constructor False : {} -> bool
 program
-fun (x : char) (v : t) (rhs : bool -> char -> char) : char = 
+fun (x : char) (v : t) (rhs : bool -> char -> char) : char =
   (join j (b : bool) : char -> char =  rhs b in
   match v return char -> char with
   | A {} ->

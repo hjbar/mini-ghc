@@ -8,7 +8,7 @@ type bool
 data constructor True : {} -> bool
 data constructor False : {} -> bool
 program
-fun [a] (xs : list a) = 
+fun [a] (xs : list a) =
   match xs return bool with
   | Nil [_] {} ->
       False {}

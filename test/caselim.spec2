@@ -5,7 +5,7 @@ type bool
 data constructor True : {} -> bool
 data constructor False : {} -> bool
 program
-fun [a] (xs : list a) (default : list a) : list a = 
+fun [a] (xs : list a) (default : list a) : list a =
   match match xs return bool with
   | Nil [_] {} ->
       True {}
