@@ -99,8 +99,21 @@ type fterm =
       * ftype
       * fterm
       * fterm (* join j [ a ... a ] (x : T) ... (x : T) : T = t in t *)
-  | SynTeJump of identifier * ftype list * fterm list * ftype
-(* jump j [ T ... T ] { t; ...; t } : T *)
+  | SynTeJump of
+      identifier
+      * ftype list
+      * fterm list
+      * ftype (* jump j [ T ... T ] { t; ...; t } : T *)
+  | SynTeLetRec of
+      identifier * ftype * fterm * fterm (* lec rec (x : T) = t in t *)
+  | SynTeJoinRec of
+      identifier
+      * identifier list
+      * (identifier * ftype) list
+      * ftype
+      * fterm
+      * fterm
+(* jump rec [ a ... a ] (x : T) ... (x : T) : T = t in t *)
 (* the parser generates [SynTeLoc] nodes to keep track of locations within the source code. *)
 
 and clause = SynClause of pattern * fterm

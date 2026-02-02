@@ -103,9 +103,22 @@ type ('a, 'b, 'c, 'd, 'e, 'f) _fterm =
       atom (* label j *)
       * ftype list (* [ T ... T ] *)
       * ('a, 'b, 'c, 'd, 'e, 'f) _fterm list (* { t; ...; t } *)
+      * ftype (* T *)
+  (* jump j [ T ... T ] { t; ...; t } : T *)
+  | TeLetRec of
+      atom
       * ftype
-(* T *)
-(* jump j [ T ... T ] { t; ...; t } : T *)
+      * ('a, 'b, 'c, 'd, 'e, 'f) _fterm
+      * ('a, 'b, 'c, 'd, 'e, 'f) _fterm (* let rec (x : T) = t in t *)
+  | TeJoinRec of
+      atom (* label j *)
+      * atom list (* [ a ... a ] *)
+      * (atom * ftype) list (* (x : T) ... (x : T) *)
+      * ftype (* T *)
+      * ('a, 'b, 'c, 'd, 'e, 'f) _fterm (* t *)
+      * ('a, 'b, 'c, 'd, 'e, 'f) _fterm
+(* t *)
+(* join rec j [ a ... a ] (x : T) ... (x : T) : T = t in t *)
 (* the parser generates [TeLoc] nodes to keep track of locations within the source code. *)
 
 and ('a, 'b, 'c, 'd, 'e, 'f) _clause =

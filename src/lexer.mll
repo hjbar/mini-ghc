@@ -23,6 +23,7 @@
       "constructor", CONSTRUCTOR;
       "program", PROGRAM;
       "type", TYPE;
+      "rec", REC;
     ]
 
 }

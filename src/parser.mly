@@ -36,12 +36,28 @@ let make_non_recursive_definition ty_args te_args ocodomain t =
     )
   )
 
+let make_recursive_definition ty_args te_args codomain t =
+  let typ =
+      let domain = fold_right (fun (_, typ) acc -> SynTyArrow (typ, acc)) te_args codomain in
+      forall ty_args domain
+  in
+
+  let term =
+    tyabs ty_args (
+      abs te_args (
+        SynTeTyAnnot (t, codomain)
+      )
+    )
+  in
+
+  (typ, term)
+
 %}
 
 %token <string * Lexing.position * Lexing.position> IDENTIFIER TAG
 %token SEMI COLON EQ DOT BAR ARROW
 %token LPAR RPAR LBRACE RBRACE LBRACKET RBRACKET
-%token FUN LET JOIN IN JUMP MATCH WITH END FORALL RETURN TYPE DATA CONSTRUCTOR PROGRAM
+%token FUN LET JOIN IN JUMP MATCH WITH END FORALL RETURN TYPE DATA CONSTRUCTOR PROGRAM REC
 %token EOF
 %start <Syntax.program> program
 
@@ -209,6 +225,13 @@ def:
 | def = non_recursive_def
     { def }
 
+recursive_def:
+| ty_args = multiple(formal_type_arguments)
+  te_args = multiple(term_arguments)
+  codomain = preceded(COLON, typ)
+  EQ t = loc(term)
+    { make_recursive_definition ty_args te_args codomain t }
+
 (* ------------------------------------------------------------------------- *)
 
 (* Terms. *)
@@ -262,6 +285,17 @@ term:
 
 | JUMP j = label_variable tys = multiple(actual_type_arguments) LBRACE args = semi(loc(term0)) RBRACE COLON return_typ = typ
     { SynTeJump (j, tys, args, return_typ) }
+
+| LET REC f = term_variable info = recursive_def IN t = loc(term)
+  { let (expected, def) = info in SynTeLetRec (f, expected, def, t) }
+
+| JOIN REC j = label_variable
+  ty_vars = multiple(formal_type_arguments)
+  te_args = multiple(term_arguments)
+  COLON codomain = typ
+  EQ def = loc(term)
+  IN body = loc(term)
+    { SynTeJoinRec (j, ty_vars, te_args, codomain, def, body) }
 
 (* ------------------------------------------------------------------------- *)
 

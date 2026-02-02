@@ -1,0 +1,19 @@
+type int
+data constructor Zero : {} -> int
+data constructor Succ : { int } -> int
+
+type list a
+data constructor Nil : forall a. {} -> list a
+data constructor Cons : forall a. { a ; list a } -> list a
+
+program
+  let length [a] (l : list a) : int =
+    join rec loop (acc : int) (l : list a) : int =
+      match l return int with
+      | Nil [_] {} -> acc
+      | Cons [_] {x ; l} -> jump loop { Succ { acc } ; x } : int
+      end
+    in
+    jump loop { Zero {} ; l } : int
+  in
+  length

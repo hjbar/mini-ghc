@@ -125,6 +125,23 @@ let rec infer (* [infer] expects... *)
     List.iter2 (check p xenv tsubst tenv jenv) terms arg_typs;
 
     expected
+  | TeLetRec (x, expected, term1, term2) ->
+    let tenv = bind x expected tenv in
+    check p xenv tsubst tenv jenv term1 expected;
+
+    infer p xenv loc tsubst tenv jenv term2
+  | TeJoinRec (j, typs, vars, expected, term1, term2) ->
+    let inside_tenv = binds vars tenv in
+    let inside_xenv = Export.sbind xenv typs in
+
+    let xenv = Export.bind xenv j in
+    let vars_typs = List.map snd vars in
+    let jenv = jbind j typs vars_typs jenv in
+
+    check p inside_xenv tsubst inside_tenv jenv term1 expected;
+    check p xenv tsubst tenv jenv term2 expected;
+
+    expected
 
 
 and check (* [check] expects... *)
@@ -317,3 +334,5 @@ let rec type_of (term : fterm) : ftype =
   | TeLoc (_, term) -> type_of term
   | TeJoin (_, _, _, ty, _, _) -> ty
   | TeJump (_, _, _, ty) -> ty
+  | TeLetRec (_, ty, term1, term2) -> ty
+  | TeJoinRec (_, _, _, ty, _, _) -> ty

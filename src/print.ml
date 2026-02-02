@@ -248,7 +248,7 @@ and pterm env term =
       let term2 = pterm outside_env term2 in
 
       definition
-        (string "join" ^^ space ^^ j ^^ typs ^^ vars ^^ colon ^^ ftype ^^ equal)
+        (string "join" ^^ line ^^ j ^^ typs ^^ vars ^^ colon ^^ ftype ^^ equal)
         term1 term2
     | TeJump (j, typs, terms, ftype) ->
       let j = pvar env j in
@@ -258,6 +258,39 @@ and pterm env term =
 
       parens
         (string "jump" ^^ space ^^ j ^^ typs ^^ space ^^ terms ^^ colon ^^ ftype)
+    | TeLetRec (x, expected, term1, term2) ->
+      let env = Export.bind env x in
+      definition
+        ( string "let rec"
+        ^^ line
+        ^^ pvar env x
+        ^^ colon
+        ^^ pty env expected
+        ^^ equal )
+        (pterm env term1) (pterm env term2)
+    | TeJoinRec (j, typs, vars, ftype, term1, term2) ->
+      let env = Export.bind env j in
+      let outside_env = env in
+      let env = Export.sbind env typs in
+      let env = Export.sbind env (List.map fst vars) in
+
+      let j = pvar env j in
+      let typs = concat_map (ptype_argument env) typs in
+      let vars = concat_map (pterm_argument env) vars in
+      let ftype = pty env ftype in
+      let term1 = pterm env term1 in
+      let term2 = pterm outside_env term2 in
+
+      definition
+        ( string "join rec"
+        ^^ line
+        ^^ j
+        ^^ typs
+        ^^ vars
+        ^^ colon
+        ^^ ftype
+        ^^ equal )
+        term1 term2
     | _ -> pterm1 env term )
 
 

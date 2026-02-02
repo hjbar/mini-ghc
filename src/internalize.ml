@@ -153,6 +153,31 @@ let rec iterm tctable env = function
         itypes tctable env typs,
         iterms tctable env fields,
         itype tctable env ftype )
+  | SynTeLetRec (x, ftype, term1, term2) ->
+    let x, env = bind env x in
+    TeLetRec
+      ( x,
+        itype tctable env ftype,
+        iterm tctable env term1,
+        iterm tctable env term2 )
+  | SynTeJoinRec (x, typs, vars, ftype, term1, term2) ->
+    let x, env = bind env x in
+    let env' = env in
+
+    let typs, env = bind_simultaneously env typs in
+
+    let var_ids, var_typs = List.split vars in
+    let var_ids, env = bind_simultaneously env var_ids in
+    let var_typs = itypes tctable env var_typs in
+    let vars = List.combine var_ids var_typs in
+
+    TeJoinRec
+      ( x,
+        typs,
+        vars,
+        itype tctable env ftype,
+        iterm tctable env term1,
+        iterm tctable env' term2 )
 
 
 and iterms tctable env terms = List.map (iterm tctable env) terms

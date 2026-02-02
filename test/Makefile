@@ -2,17 +2,21 @@ DIFF=diff --ignore-all-space
 
 SRC=$(wildcard *.f)
 SRCJ=$(wildcard *.fj)
+SRCJREC=$(wildcard *.fjrec)
 
 BAD=$(wildcard bad/*.f)
 BADJ=$(wildcard bad/*.fj)
+BADJREC=$(wildcard bad/*.fjrec)
 
 ECHO=$(SRC:.f=.echo)
 
 TYPECHECK=$(SRC:.f=.typecheck)
 TYPECHECKJ=$(SRCJ:.fj=.typecheckj)
+TYPECHECKJREC=$(SRCJREC:.fjrec=.typecheckjrec)
 
 TYPEFAIL=$(BAD:.f=.typefail)
 TYPEFAILJ=$(BADJ:.fj=.typefailj)
+TYPEFAILJREC=$(BADJREC:.fjrec=.typefailjrec)
 
 OPTIMIZE2=$(SRC:.f=.opt2)
 OPTIMIZE3=$(SRCJ:.fj=.opt3) $(SRC:.f=.opt3)
@@ -86,24 +90,19 @@ test3b: $(OPTIMIZE3)
 test3: test3a test3b
 
 ################################################################
-# Global tests
+# Typecheck fjrec
 
-typecheck-success: test1-success test3a-success
+%.typecheckjrec: %.fjrec force
+	$(JOUJOU) $< > /dev/null
 
-typecheck-fail: test1-fail test3a-fail
+%.typefailjrec: %.fjrec force
+	! $(JOUJOU) $< &> /dev/null
 
-typecheck: test1 test3a
+testrec-success: $(TYPECHECKJREC) $(TYPECHECKJ) $(TYPECHECK)
 
-optimize: test2 test3b
+testrec-fail : $(TYPEFAILJREC) $(TYPEFAILJ) $(TYPEFAIL)
 
-################################################################
-# Misc.
-
-force:
-	@true
-
-clean:
-	rm -f *.opt2 *.opt3 *.eopt
+testrec: testrec-success testrec-fail
 
 ################################################################
 # Test Erase
@@ -123,3 +122,21 @@ test-erasej: $(ERASEJ)
 erase: test-erase test-erasej
 
 ################################################################
+# Global tests
+
+typecheck-success: test1-success test3a-success testrec-success
+
+typecheck-fail: test1-fail test3a-fail testrec-fail
+
+typecheck: test1 test3a testrec
+
+optimize: test2 test3b
+
+################################################################
+# Misc.
+
+force:
+	@true
+
+clean:
+	rm -f *.opt2 *.opt3 *.eopt

@@ -41,6 +41,15 @@ test3b: all
 test3: all
 	@JOUJOU="../src/joujou.exe" $(MAKE) -C ../test test3
 
+testrec-success: all
+	@JOUJOU="../src/joujou.exe" $(MAKE) -C ../test testrec-success
+
+testrec-fail: all
+	@JOUJOU="../src/joujou.exe" $(MAKE) -C ../test testrec-fail
+
+testrec: all
+	@JOUJOU="../src/joujou.exe" $(MAKE) -C ../test testrec
+
 typecheck-success: all
 	@JOUJOU="../src/joujou.exe" $(MAKE) -C ../test typecheck-success
 
