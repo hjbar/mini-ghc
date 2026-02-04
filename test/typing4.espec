@@ -8,13 +8,13 @@ data constructor False : {} -> bool
 program
 fun (v : t) (big : bool) : bool =
   let j =
-    fun (x : bool) : bool =
+    (fun (x : bool) : bool =
       match big return bool with
       | True {} ->
           False {}
       | False {} ->
           True {}
-      end
+      end : bool -> bool)
   in
   match v return bool with
   | A {} ->

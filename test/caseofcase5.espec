@@ -12,7 +12,7 @@ data constructor B : {} -> t1
 data constructor A : {} -> t1
 program
 let j =
-  fun (x : t3) : t4 =
-    match x return t4 with | E {} -> G {} | F {} -> H {} end
+  (fun (x : t3) : t4 =
+    match x return t4 with | E {} -> G {} | F {} -> H {} end : t3 -> t4)
 in
 ((j E {} : t4) : t4)

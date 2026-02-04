@@ -7,7 +7,7 @@ data constructor False : {} -> bool
 program
 fun [a] (xs : list a) (default : list a) : list a =
   let j =
-    fun (x : bool) : list a =
+    (fun (x : bool) : list a =
       match x return list a with
       | True {} ->
           default
@@ -18,7 +18,7 @@ fun [a] (xs : list a) (default : list a) : list a =
           | Cons [_] { _; xs_1_ } ->
               xs_1_
           end : list a)
-      end
+      end : bool -> list a)
   in
   match xs return list a with
   | Nil [_] {} ->

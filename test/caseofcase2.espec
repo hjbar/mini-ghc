@@ -8,13 +8,13 @@ program
 fun [a] [b] [c] (v : list a) (e1 : maybe b) (e2 : a -> list a -> maybe b) (big1 :
   c) (big2 : b -> c) : c =
   let j =
-    fun (x : maybe b) : c =
+    (fun (x : maybe b) : c =
       match x return c with
       | Nothing [b_1_] {} ->
           big1
       | Just [b_1_] { x_1_ } ->
           big2 x_1_
-      end
+      end : maybe b -> c)
   in
   match v return c with
   | Nil [a_1_] {} ->

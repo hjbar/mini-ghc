@@ -10,13 +10,13 @@ data constructor False : {} -> bool
 program
 fun [a] (xs : list a) : bool =
   let j =
-    fun (x : maybe a) : bool =
+    (fun (x : maybe a) : bool =
       match x return bool with
       | Nothing [_] {} ->
           False {}
       | Just [_] { _ } ->
           True {}
-      end
+      end : maybe a -> bool)
   in
   match xs return bool with
   | Nil [a_1_] {} ->

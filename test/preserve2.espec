@@ -7,7 +7,7 @@ data constructor True : {} -> bool
 data constructor False : {} -> bool
 program
 fun (v : t) (big : bool) : bool =
-  match let j = fun (x : bool) : bool =  big in
+  match let j = (fun (x : bool) : bool = big : bool -> bool) in
   match v return bool with
   | A {} ->
       (j True {} : bool)

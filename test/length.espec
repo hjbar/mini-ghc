@@ -1,0 +1,18 @@
+type list a
+data constructor Nil : forall a. {} -> list a
+data constructor Cons : forall a. { a; list a } -> list a
+type int
+data constructor Zero : {} -> int
+data constructor Succ : { int } -> int
+program
+fun [a] (l : list a) : int =
+  let rec loop : int -> list a -> int =
+    fun (acc : int) (l_1_ : list a) : int =
+      match l_1_ return int with
+      | Nil [_] {} ->
+          acc
+      | Cons [_] { x; l_2_ } ->
+          (loop Succ { acc } l_2_ : int)
+      end
+  in
+  (loop Zero {} l : int)

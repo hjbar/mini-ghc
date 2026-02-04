@@ -4,8 +4,9 @@ data constructor False : {} -> bool
 program
 fun [a] (x : bool) (y : bool) (big1 : a) (big2 : a) : a =
   let j =
-    fun (x_1_ : bool) : a =
-      match x_1_ return a with | True {} -> big1 | False {} -> big2 end
+    (fun (x_1_ : bool) : a =
+      match x_1_ return a with | True {} -> big1 | False {} -> big2 end : bool ->
+    a)
   in
   match x return a with
   | True {} ->

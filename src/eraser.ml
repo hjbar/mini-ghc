@@ -46,6 +46,12 @@ let rec erase (xenv : atom AtomMap.t) : fterm -> pre_fterm = function
     let x = Atom.fresh (Identifier.mk j_name Syntax.term_sort) in
     let inner_xenv = AtomMap.add j x xenv in
 
+    let type_ =
+      expected
+      |> List.fold_right (fun (_, typ) acc -> TyArrow (typ, acc)) vars
+      |> List.fold_right (fun a acc -> TyForall (Types.abstract a acc)) typs
+    in
+
     let term1 =
       TeTyAnnot (erase xenv term1, expected)
       |> List.fold_right (fun (x, typ) acc -> TeAbs (x, typ, acc)) vars
@@ -54,7 +60,7 @@ let rec erase (xenv : atom AtomMap.t) : fterm -> pre_fterm = function
 
     let term2 = erase inner_xenv term2 in
 
-    TeLet (x, term1, term2)
+    TeLet (x, TeTyAnnot (term1, type_), term2)
   | TeJump (j, typs, terms, expected) ->
     let x = AtomMap.find j xenv in
     let x = TeVar (x, reset ()) in
@@ -69,6 +75,28 @@ let rec erase (xenv : atom AtomMap.t) : fterm -> pre_fterm = function
     in
 
     TeTyAnnot (call, expected)
+  | TeLetRec (x, expected, term1, term2) ->
+    TeLetRec (x, expected, erase xenv term1, erase xenv term2)
+  | TeJoinRec (j, typs, vars, expected, term1, term2) ->
+    let j_name = j |> Atom.identifier |> Identifier.name in
+    let x = Atom.fresh (Identifier.mk j_name Syntax.term_sort) in
+    let xenv = AtomMap.add j x xenv in
+
+    let type_ =
+      expected
+      |> List.fold_right (fun (_, typ) acc -> TyArrow (typ, acc)) vars
+      |> List.fold_right (fun a acc -> TyForall (Types.abstract a acc)) typs
+    in
+
+    let term1 =
+      TeTyAnnot (erase xenv term1, expected)
+      |> List.fold_right (fun (x, typ) acc -> TeAbs (x, typ, acc)) vars
+      |> List.fold_right (fun a acc -> TeTyAbs (a, acc)) typs
+    in
+
+    let term2 = erase xenv term2 in
+
+    TeLetRec (x, type_, term1, term2)
 
 
 (* [program prog] erases the program [prog].

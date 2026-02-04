@@ -13,17 +13,17 @@ data constructor A : {} -> t1
 program
 fun (x : t1) : t4 =
   let j =
-    fun (x_1_ : t3) : t4 =
-      match x_1_ return t4 with | E {} -> G {} | F {} -> H {} end
+    (fun (x_1_ : t3) : t4 =
+      match x_1_ return t4 with | E {} -> G {} | F {} -> H {} end : t3 -> t4)
   in
   let j_1_ =
-    fun (x_1_ : t2) : t4 =
+    (fun (x_1_ : t2) : t4 =
       match x_1_ return t4 with
       | C {} ->
           (j E {} : t4)
       | D {} ->
           (j F {} : t4)
-      end
+      end : t2 -> t4)
   in
   match x return t4 with
   | A {} ->

@@ -2,4 +2,5 @@ type c
 data constructor C : {} -> c
 program
 fun [a] [b] (v : b) =
-  let j = fun [b_1_] (x : b_1_) : c = C {} in (j [b] v : c)
+  let j = (fun [b_1_] (x : b_1_) : c = C {} : forall b_1_. b_1_ -> c) in
+  (j [b] v : c)

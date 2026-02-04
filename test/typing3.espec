@@ -8,7 +8,7 @@ data constructor True : {} -> bool
 data constructor False : {} -> bool
 program
 fun (x : char) (v : t) (rhs : char -> char) : char =
-  let j = fun (b : bool) : char =  rhs x in
+  let j = (fun (b : bool) : char = rhs x : bool -> char) in
   match v return char with
   | A {} ->
       (j True {} : char)

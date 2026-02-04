@@ -8,12 +8,12 @@ program
 fun [a] [b] [c] (b : bool) (e1 : list b) (e2 : list b) (big1 : c) (big2 : b ->
   list b -> c) : c =
   let j =
-    fun (x : list b) : c =
+    (fun (x : list b) : c =
       match x return c with
       | Nil [_] {} ->
           big1
       | Cons [_] { a; as } ->
           big2 a as
-      end
+      end : list b -> c)
   in
   match b return c with | True {} -> (j e1 : c) | False {} -> (j e2 : c) end

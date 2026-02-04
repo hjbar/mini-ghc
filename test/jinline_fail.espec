@@ -7,4 +7,5 @@ data constructor True : {} -> bool
 data constructor False : {} -> bool
 program
 fun (plus : int -> int -> int) : int =
-  let j = fun (x : int) : int =  plus x One {} in (j Two {} : int)
+  let j = (fun (x : int) : int = plus x One {} : int -> int) in
+  (j Two {} : int)

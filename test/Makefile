@@ -23,6 +23,7 @@ OPTIMIZE3=$(SRC:.f=.opt3) $(SRCJ:.fj=.opt3) $(SRCJREC:.fjrec=.opt3)
 
 ERASE=$(SRC:.f=.erase)
 ERASEJ=$(SRCJ:.fj=.erasej)
+ERASEJREC=$(SRCJREC:.fjrec=.erasejrec)
 
 JOUJOU ?= ../src/joujou.exe
 
@@ -119,11 +120,17 @@ testrec: testrec-success testrec-fail
 	$(JOUJOU) --optimize --case-of-case --erase $< > $*.eopt
 	@$(DIFF) $*.eopt $*.espec; true
 
+%.erasejrec: %.fjrec force
+	$(JOUJOU) --optimize --case-of-case --erase $< > $*.eopt
+	@$(DIFF) $*.eopt $*.espec; true
+
 test-erase: $(ERASE)
 
 test-erasej: $(ERASEJ)
 
-erase: test-erase test-erasej
+test-erasejrec: $(ERASEJREC)
+
+erase: test-erase test-erasej test-erasejrec
 
 ################################################################
 # Global tests
