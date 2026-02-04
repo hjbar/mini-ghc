@@ -1,0 +1,7 @@
+type pair a b
+data constructor Pair : forall a b. { a; b } -> pair a b
+type bool
+data constructor True : {} -> bool
+data constructor False : {} -> bool
+program
+Pair [bool] [bool] { False {}; True {} }

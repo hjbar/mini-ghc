@@ -1,0 +1,5 @@
+type pair a b
+data constructor Pair : forall a b. { a; b } -> pair a b
+type int
+program
+fun [b] (x : int) (y : b) = Pair [int] [b] { x; y }
