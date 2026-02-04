@@ -334,5 +334,5 @@ let rec type_of (term : fterm) : ftype =
   | TeLoc (_, term) -> type_of term
   | TeJoin (_, _, _, ty, _, _) -> ty
   | TeJump (_, _, _, ty) -> ty
-  | TeLetRec (_, ty, term1, term2) -> ty
+  | TeLetRec (_, _, term1, term2) -> type_of term2
   | TeJoinRec (_, _, _, ty, _, _) -> ty

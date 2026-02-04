@@ -149,6 +149,8 @@ let get_CtxtMatch = function
   | _ -> assert false
 
 
+let can_drop x t = not (AtomSet.mem x (Symbols.fv t))
+
 let perform_caseofcase ctx = !optimize_caseofcase && is_CtxtMatch ctx
 
 (* ------------------------------------------------------------------------- *)
@@ -215,7 +217,7 @@ and simplify1 (args : context) (Scope (subst, tsubst, term) : fterm scoped) :
     let tsubst = Tsubst.bind a ty tsubst in
 
     simplify1 args (Scope (subst, tsubst, body))
-  (* rule (inline) + (drop) *)
+  (* rule (inline) + (drop) for let *)
   | TeLet (x, term1, term2) ->
     let v = simplify (Scope (subst, tsubst, term1)) in
     let subst = Subst.bind x v subst in
@@ -283,6 +285,15 @@ and simplify1 (args : context) (Scope (subst, tsubst, term) : fterm scoped) :
     let terms = List.map (fun t -> simplify (Scope (subst, tsubst, t))) terms in
 
     TeJump (j, typs, terms, type_of_cont args)
+  (* rule (drop) for let rec *)
+  | TeLetRec (x, expected, term1, term2) when can_drop x term2 ->
+    simplify1 args (Scope (subst, tsubst, term2))
+  (* rule (jdrop) for join *)
+  | TeJoin (j, typs, vars, expected, term1, term2) when can_drop j term2 ->
+    simplify1 args (Scope (subst, tsubst, term2))
+  (* rule (jdrop) for join rec *)
+  | TeJoinRec (j, typs, vars, expected, term1, term2) when can_drop j term2 ->
+    simplify1 args (Scope (subst, tsubst, term2))
   | _ ->
     (* 3. Structural rules *)
     let term = simplify2 (Scope (subst, tsubst, term)) in
@@ -333,6 +344,21 @@ and simplify2 (Scope (subst, tsubst, term) : fterm scoped) : pre_fterm =
     let terms = List.map (fun t -> simplify (Scope (subst, tsubst, t))) terms in
 
     TeJump (j, typs, terms, expected)
+  | TeLetRec (x, expected, term1, term2) ->
+    let expected = Tsubst.apply tsubst expected in
+    let term1 = simplify (Scope (subst, tsubst, term1)) in
+    let term2 = simplify (Scope (subst, tsubst, term2)) in
+    TeLetRec (x, expected, term1, term2)
+  | TeJoinRec (j, typs, vars, expected, term1, term2) ->
+    let vars =
+      List.map (fun (x, ftype) -> (x, Tsubst.apply tsubst ftype)) vars
+    in
+    let expected = Tsubst.apply tsubst expected in
+
+    let term1 = simplify (Scope (subst, tsubst, term1)) in
+    let term2 = simplify (Scope (subst, tsubst, term2)) in
+
+    TeJoinRec (j, typs, vars, expected, term1, term2)
   | _ -> assert false
 
 

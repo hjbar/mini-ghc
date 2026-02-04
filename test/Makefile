@@ -19,7 +19,7 @@ TYPEFAILJ=$(BADJ:.fj=.typefailj)
 TYPEFAILJREC=$(BADJREC:.fjrec=.typefailjrec)
 
 OPTIMIZE2=$(SRC:.f=.opt2)
-OPTIMIZE3=$(SRCJ:.fj=.opt3) $(SRC:.f=.opt3)
+OPTIMIZE3=$(SRC:.f=.opt3) $(SRCJ:.fj=.opt3) $(SRCJREC:.fjrec=.opt3)
 
 ERASE=$(SRC:.f=.erase)
 ERASEJ=$(SRCJ:.fj=.erasej)
@@ -71,11 +71,15 @@ test2: $(OPTIMIZE2)
 %.typefailj: %.fj force
 	! $(JOUJOU) $< &> /dev/null
 
+%.opt3: %.f force
+	$(JOUJOU) --optimize --case-of-case $< > $*.opt3
+	@$(DIFF) $*.opt3 $*.spec3; true
+
 %.opt3: %.fj force
 	$(JOUJOU) --optimize --case-of-case $< > $*.opt3
 	@$(DIFF) $*.opt3 $*.spec3; true
 
-%.opt3: %.f force
+%.opt3: %.fjrec force
 	$(JOUJOU) --optimize --case-of-case $< > $*.opt3
 	@$(DIFF) $*.opt3 $*.spec3; true
 

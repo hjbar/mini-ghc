@@ -1,0 +1,22 @@
+type list a
+data constructor Nil : forall a. {} -> list a
+data constructor Cons : forall a. { a; list a } -> list a
+type bool
+data constructor True : {} -> bool
+data constructor False : {} -> bool
+program
+let rec filter : forall a. (a -> bool) -> list a -> list a =
+  fun [a] (f : a -> bool) (l : list a) : list a =
+    match l return list a with
+    | Nil [_] {} ->
+        Nil [a] {}
+    | Cons [_] { x; l_1_ } ->
+        match f x return list a with
+        | True {} ->
+            Cons [a] { x; filter [a] f l_1_ }
+        | False {} ->
+            filter [a] f l_1_
+        end
+    end
+in
+filter
