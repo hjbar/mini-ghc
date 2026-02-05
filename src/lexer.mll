@@ -24,6 +24,7 @@
       "program", PROGRAM;
       "type", TYPE;
       "rec", REC;
+      "and", AND;
     ]
 
 }

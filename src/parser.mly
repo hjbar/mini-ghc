@@ -57,7 +57,7 @@ let make_recursive_definition ty_args te_args codomain t =
 %token <string * Lexing.position * Lexing.position> IDENTIFIER TAG
 %token SEMI COLON EQ DOT BAR ARROW
 %token LPAR RPAR LBRACE RBRACE LBRACKET RBRACKET
-%token FUN LET JOIN IN JUMP MATCH WITH END FORALL RETURN TYPE DATA CONSTRUCTOR PROGRAM REC
+%token FUN LET JOIN IN JUMP MATCH WITH END FORALL RETURN TYPE DATA CONSTRUCTOR PROGRAM REC AND
 %token EOF
 %start <Syntax.program> program
 
@@ -286,16 +286,19 @@ term:
 | JUMP j = label_variable tys = multiple(actual_type_arguments) LBRACE args = semi(loc(term0)) RBRACE COLON return_typ = typ
     { SynTeJump (j, tys, args, return_typ) }
 
-| LET REC f = term_variable info = recursive_def IN t = loc(term)
-  { let (expected, def) = info in SynTeLetRec (f, expected, def, t) }
+| LET REC defs = separated_nonempty_list(AND, def_let_rec) IN t = loc(term)
+    { SynTeLetRec (defs, t) }
 
-| JOIN REC j = label_variable
-  ty_vars = multiple(formal_type_arguments)
-  te_args = multiple(term_arguments)
-  COLON codomain = typ
-  EQ def = loc(term)
-  IN body = loc(term)
-    { SynTeJoinRec (j, ty_vars, te_args, codomain, def, body) }
+| JOIN REC defs = separated_nonempty_list(AND, def_join_rec) IN body = loc(term)
+    { SynTeJoinRec (defs, body) }
+
+def_let_rec:
+| f = term_variable info = recursive_def
+    { let (expected, def) = info in (f, expected, def) }
+
+def_join_rec:
+| j = label_variable ty_vars = multiple(formal_type_arguments) te_args = multiple(term_arguments) COLON codomain = typ EQ def = loc(term)
+    { (j, ty_vars, te_args, codomain, def) }
 
 (* ------------------------------------------------------------------------- *)
 

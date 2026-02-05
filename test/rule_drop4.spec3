@@ -1,0 +1,8 @@
+type int
+data constructor Zero : {} -> int
+data constructor Succ : { int } -> int
+type bool
+data constructor True : {} -> bool
+data constructor False : {} -> bool
+program
+False {}

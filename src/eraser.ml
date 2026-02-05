@@ -75,28 +75,47 @@ let rec erase (xenv : atom AtomMap.t) : fterm -> pre_fterm = function
     in
 
     TeTyAnnot (call, expected)
-  | TeLetRec (x, expected, term1, term2) ->
-    TeLetRec (x, expected, erase xenv term1, erase xenv term2)
-  | TeJoinRec (j, typs, vars, expected, term1, term2) ->
-    let j_name = j |> Atom.identifier |> Identifier.name in
-    let x = Atom.fresh (Identifier.mk j_name Syntax.term_sort) in
-    let xenv = AtomMap.add j x xenv in
-
-    let type_ =
-      expected
-      |> List.fold_right (fun (_, typ) acc -> TyArrow (typ, acc)) vars
-      |> List.fold_right (fun a acc -> TyForall (Types.abstract a acc)) typs
+  | TeLetRec (defs, term2) ->
+    let defs =
+      List.map
+        (fun (x, expected, term1) -> (x, expected, erase xenv term1))
+        defs
+    in
+    TeLetRec (defs, erase xenv term2)
+  | TeJoinRec (defs, term2) ->
+    let xenv, xs =
+      List.fold_left_map
+        (fun xenv (j, _, _, _, _) ->
+          let j_name = j |> Atom.identifier |> Identifier.name in
+          let x = Atom.fresh (Identifier.mk j_name Syntax.term_sort) in
+          (AtomMap.add j x xenv, x) )
+        xenv defs
     in
 
-    let term1 =
-      TeTyAnnot (erase xenv term1, expected)
-      |> List.fold_right (fun (x, typ) acc -> TeAbs (x, typ, acc)) vars
-      |> List.fold_right (fun a acc -> TeTyAbs (a, acc)) typs
+    let defs =
+      List.map2
+        (fun x (_, typs, vars, expected, term1) ->
+          let type_ =
+            expected
+            |> List.fold_right (fun (_, typ) acc -> TyArrow (typ, acc)) vars
+            |> List.fold_right
+                 (fun a acc -> TyForall (Types.abstract a acc))
+                 typs
+          in
+
+          let term1 =
+            TeTyAnnot (erase xenv term1, expected)
+            |> List.fold_right (fun (x, typ) acc -> TeAbs (x, typ, acc)) vars
+            |> List.fold_right (fun a acc -> TeTyAbs (a, acc)) typs
+          in
+
+          (x, type_, term1) )
+        xs defs
     in
 
     let term2 = erase xenv term2 in
 
-    TeLetRec (x, type_, term1, term2)
+    TeLetRec (defs, term2)
 
 
 (* [program prog] erases the program [prog].

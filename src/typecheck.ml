@@ -125,20 +125,44 @@ let rec infer (* [infer] expects... *)
     List.iter2 (check p xenv tsubst tenv jenv) terms arg_typs;
 
     expected
-  | TeLetRec (x, expected, term1, term2) ->
-    let tenv = bind x expected tenv in
-    check p xenv tsubst tenv jenv term1 expected;
+  | TeLetRec (defs, term2) ->
+    let tenv =
+      List.fold_left
+        (fun tenv (x, expected, _) -> bind x expected tenv)
+        tenv defs
+    in
+
+    List.iter
+      (fun (_, expected, term1) -> check p xenv tsubst tenv jenv term1 expected)
+      defs;
 
     infer p xenv loc tsubst tenv jenv term2
-  | TeJoinRec (j, typs, vars, expected, term1, term2) ->
-    let inside_tenv = binds vars tenv in
-    let inside_xenv = Export.sbind xenv typs in
+  | TeJoinRec (defs, term2) ->
+    let xenv =
+      List.fold_left (fun xenv (j, _, _, _, _) -> Export.bind xenv j) xenv defs
+    in
+    let jenv =
+      List.fold_left
+        (fun jenv (j, typs, vars, _, _) ->
+          let vars_typs = List.map snd vars in
+          jbind j typs vars_typs jenv )
+        jenv defs
+    in
 
-    let xenv = Export.bind xenv j in
-    let vars_typs = List.map snd vars in
-    let jenv = jbind j typs vars_typs jenv in
+    List.iter
+      (fun (_, typs, vars, expected, term1) ->
+        let tenv = binds vars tenv in
+        let xenv = Export.sbind xenv typs in
+        check p xenv tsubst tenv jenv term1 expected )
+      defs;
 
-    check p inside_xenv tsubst inside_tenv jenv term1 expected;
+    let _, _, _, expected, _ = List.hd defs in
+    List.iter
+      (fun (_, _, _, expected', _) ->
+        if not (Types.equal expected expected') then
+          mismatch xenv loc expected expected' )
+      defs;
+
     check p xenv tsubst tenv jenv term2 expected;
 
     expected
@@ -334,5 +358,7 @@ let rec type_of (term : fterm) : ftype =
   | TeLoc (_, term) -> type_of term
   | TeJoin (_, _, _, ty, _, _) -> ty
   | TeJump (_, _, _, ty) -> ty
-  | TeLetRec (_, _, term1, term2) -> type_of term2
-  | TeJoinRec (_, _, _, ty, _, _) -> ty
+  | TeLetRec (_, term2) -> type_of term2
+  | TeJoinRec (defs, _) ->
+    let _, _, _, ty, _ = List.hd defs in
+    ty

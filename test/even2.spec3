@@ -1,0 +1,23 @@
+type int
+data constructor Zero : {} -> int
+data constructor Succ : { int } -> int
+type bool
+data constructor True : {} -> bool
+data constructor False : {} -> bool
+program
+join rec is_even (n : int) : bool =
+  match n return bool with
+  | Zero {} ->
+      True {}
+  | Succ { m } ->
+      (jump is_odd { m } : bool)
+  end
+and is_odd (n : int) : bool =
+  match n return bool with
+  | Zero {} ->
+      False {}
+  | Succ { m } ->
+      (jump is_even { m } : bool)
+  end
+in
+(jump is_even { Succ { Succ { Zero {} } } } : bool)

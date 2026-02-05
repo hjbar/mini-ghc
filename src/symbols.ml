@@ -35,14 +35,30 @@ let rec fv = function
     let fv2 = AtomSet.remove j (fv term2) in
     AtomSet.union fv1 fv2
   | TeJump (j, _, fields, _) -> AtomSet.add j (union_map fv fields)
-  | TeLetRec (x, _, term1, term2) ->
-    AtomSet.remove x (AtomSet.union (fv term1) (fv term2))
-  | TeJoinRec (j, _, vars, _, term1, term2) ->
-    let fv1 =
-      List.fold_left (fun acc (x, _) -> AtomSet.remove x acc) (fv term1) vars
+  | TeLetRec (defs, term2) ->
+    let set1 =
+      List.fold_left
+        (fun set1 (_, _, term1) -> AtomSet.union set1 (fv term1))
+        AtomSet.empty defs
     in
-    let fv2 = fv term2 in
-    AtomSet.remove j (AtomSet.union fv1 fv2)
+    let set2 = fv term2 in
+    let set = AtomSet.union set1 set2 in
+    List.fold_left (fun set (x, _, _) -> AtomSet.remove x set) set defs
+  | TeJoinRec (defs, term2) ->
+    let set1 =
+      List.fold_left
+        (fun acc (_, _, vars, _, term1) ->
+          let set1 =
+            List.fold_left
+              (fun fv1 (x, _) -> AtomSet.remove x fv1)
+              (fv term1) vars
+          in
+          AtomSet.union acc set1 )
+        AtomSet.empty defs
+    in
+    let set2 = fv term2 in
+    let set = AtomSet.union set1 set2 in
+    List.fold_left (fun set (j, _, _, _, _) -> AtomSet.remove j set) set defs
 
 
 and fv_clause = function

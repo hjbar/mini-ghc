@@ -1,0 +1,15 @@
+type int
+data constructor Zero : {} -> int
+data constructor Succ : { int } -> int
+type bool
+data constructor True : {} -> bool
+data constructor False : {} -> bool
+program
+let rec even : int -> bool =
+  fun (n : int) : bool =
+    match n return bool with | Zero {} -> True {} | Succ { m } -> odd m end
+and odd : int -> bool =
+  fun (n : int) : bool =
+    match n return bool with | Zero {} -> False {} | Succ { m } -> even m end
+in
+even

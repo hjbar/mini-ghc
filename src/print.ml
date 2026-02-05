@@ -258,39 +258,67 @@ and pterm env term =
 
       parens
         (string "jump" ^^ space ^^ j ^^ typs ^^ space ^^ terms ^^ colon ^^ ftype)
-    | TeLetRec (x, expected, term1, term2) ->
-      let env = Export.bind env x in
-      definition
-        ( string "let rec"
-        ^^ line
-        ^^ pvar env x
-        ^^ colon
-        ^^ pty env expected
-        ^^ equal )
-        (pterm env term1) (pterm env term2)
-    | TeJoinRec (j, typs, vars, ftype, term1, term2) ->
-      let env = Export.bind env j in
-      let outside_env = env in
-      let env = Export.sbind env typs in
-      let env = Export.sbind env (List.map fst vars) in
+    | TeLetRec (defs, term2) ->
+      let env =
+        List.fold_left (fun env (x, _, _) -> Export.bind env x) env defs
+      in
 
-      let j = pvar env j in
-      let typs = concat_map (ptype_argument env) typs in
-      let vars = concat_map (pterm_argument env) vars in
-      let ftype = pty env ftype in
-      let term1 = pterm env term1 in
-      let term2 = pterm outside_env term2 in
+      let _, doc1 =
+        List.fold_left
+          (fun (first, doc) (x, expected, term1) ->
+            let def1 =
+              string (if first then "let rec" else "and")
+              ^^ line
+              ^^ pvar env x
+              ^^ colon
+              ^^ pty env expected
+              ^^ equal
+            in
 
-      definition
-        ( string "join rec"
-        ^^ line
-        ^^ j
-        ^^ typs
-        ^^ vars
-        ^^ colon
-        ^^ ftype
-        ^^ equal )
-        term1 term2
+            let term1 = pterm env term1 in
+
+            (false, doc ^^ group (group def1 ^^ jump term1)) )
+          (true, empty) defs
+      in
+
+      let doc2 = pterm env term2 in
+
+      group (doc1 ^^ string "in") ^^ line ^^ doc2
+    | TeJoinRec (defs, term2) ->
+      let env =
+        List.fold_left (fun env (j, _, _, _, _) -> Export.bind env j) env defs
+      in
+
+      let _, doc1 =
+        List.fold_left
+          (fun (first, doc) (j, typs, vars, ftype, term1) ->
+            let env = Export.sbind env typs in
+            let env = Export.sbind env (List.map fst vars) in
+
+            let j = pvar env j in
+            let typs = concat_map (ptype_argument env) typs in
+            let vars = concat_map (pterm_argument env) vars in
+            let ftype = pty env ftype in
+            let term1 = pterm env term1 in
+
+            let def1 =
+              string (if first then "join rec" else "and")
+              ^^ line
+              ^^ j
+              ^^ typs
+              ^^ vars
+              ^^ colon
+              ^^ ftype
+              ^^ equal
+            in
+
+            (false, doc ^^ group (group def1 ^^ jump term1)) )
+          (true, empty) defs
+      in
+
+      let doc2 = pterm env term2 in
+
+      group (doc1 ^^ string "in") ^^ line ^^ doc2
     | _ -> pterm1 env term )
 
 

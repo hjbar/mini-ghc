@@ -153,31 +153,47 @@ let rec iterm tctable env = function
         itypes tctable env typs,
         iterms tctable env fields,
         itype tctable env ftype )
-  | SynTeLetRec (x, ftype, term1, term2) ->
-    let x, env = bind env x in
-    TeLetRec
-      ( x,
-        itype tctable env ftype,
-        iterm tctable env term1,
-        iterm tctable env term2 )
-  | SynTeJoinRec (x, typs, vars, ftype, term1, term2) ->
-    let x, env = bind env x in
-    let env' = env in
+  | SynTeLetRec (defs, term2) ->
+    let env, xs =
+      List.fold_left_map
+        (fun env (x, _, _) ->
+          let x, env = bind env x in
+          (env, x) )
+        env defs
+    in
 
-    let typs, env = bind_simultaneously env typs in
+    let defs =
+      List.map2
+        (fun x (_, ftype, term1) ->
+          (x, itype tctable env ftype, iterm tctable env term1) )
+        xs defs
+    in
 
-    let var_ids, var_typs = List.split vars in
-    let var_ids, env = bind_simultaneously env var_ids in
-    let var_typs = itypes tctable env var_typs in
-    let vars = List.combine var_ids var_typs in
+    TeLetRec (defs, iterm tctable env term2)
+  | SynTeJoinRec (defs, term2) ->
+    let env, js =
+      List.fold_left_map
+        (fun env (j, _, _, _, _) ->
+          let j, env = bind env j in
+          (env, j) )
+        env defs
+    in
 
-    TeJoinRec
-      ( x,
-        typs,
-        vars,
-        itype tctable env ftype,
-        iterm tctable env term1,
-        iterm tctable env' term2 )
+    let defs =
+      List.map2
+        (fun j (_, typs, vars, ftype, term1) ->
+          let typs, env = bind_simultaneously env typs in
+
+          let var_ids, var_typs = List.split vars in
+          let var_ids, env = bind_simultaneously env var_ids in
+          let var_typs = itypes tctable env var_typs in
+          let vars = List.combine var_ids var_typs in
+
+          (j, typs, vars, itype tctable env ftype, iterm tctable env term1) )
+        js defs
+    in
+
+    TeJoinRec (defs, iterm tctable env term2)
 
 
 and iterms tctable env terms = List.map (iterm tctable env) terms
