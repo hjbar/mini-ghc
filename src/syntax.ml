@@ -98,15 +98,12 @@ type fterm =
       * (identifier * ftype) list
       * ftype
       * fterm
-      * fterm (* join j [ a ... a ] (x : T) ... (x : T) : T = t in t *)
-  | SynTeJump of
-      identifier
-      * ftype list
-      * fterm list
-      * ftype (* jump j [ T ... T ] { t; ...; t } : T *)
-  | SynTeLetRec of
-      (identifier * ftype * fterm) list
-      * fterm (* lec rec (x : T) = t and (x : T) = t ... and (x : T) = t in t *)
+      * fterm
+    (* join j [ a ... a ] (x : T) ... (x : T) : T = t in t *)
+  | SynTeJump of identifier * ftype list * fterm list * ftype
+    (* jump j [ T ... T ] { t; ...; t } : T *)
+  | SynTeLetRec of (identifier * ftype * fterm) list * fterm
+    (* lec rec (x : T) = t and (x : T) = t ... and (x : T) = t in t *)
   | SynTeJoinRec of
       (identifier * identifier list * (identifier * ftype) list * ftype * fterm)
       list

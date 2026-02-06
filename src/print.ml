@@ -68,6 +68,13 @@ let definition head body cont =
   group (group head ^^ jump body ^^ string "in") ^^ line ^^ cont
 
 
+let mutual_definitions defs cont =
+  let defs =
+    concat_map (fun (head, body) -> group (group head ^^ jump body)) defs
+  in
+  group (defs ^^ string "in") ^^ line ^^ cont
+
+
 (* ------------------------------------------------------------------------- *)
 
 (* Tuples. *)
@@ -240,85 +247,69 @@ and pterm env term =
       let env = Export.sbind env typs in
       let env = Export.sbind env (List.map fst vars) in
 
-      let j = pvar env j in
-      let typs = concat_map (ptype_argument env) typs in
-      let vars = concat_map (pterm_argument env) vars in
-      let ftype = pty env ftype in
-      let term1 = pterm env term1 in
-      let term2 = pterm outside_env term2 in
-
       definition
-        (string "join" ^^ line ^^ j ^^ typs ^^ vars ^^ colon ^^ ftype ^^ equal)
-        term1 term2
+        ( string "join"
+        ^^ line
+        ^^ pvar env j
+        ^^ concat_map (ptype_argument env) typs
+        ^^ concat_map (pterm_argument env) vars
+        ^^ colon
+        ^^ pty env ftype
+        ^^ equal )
+        (pterm env term1) (pterm outside_env term2)
     | TeJump (j, typs, terms, ftype) ->
-      let j = pvar env j in
-      let terms = pfields (pterm0 env) terms in
-      let typs = concat_map (brackets_pty env) typs in
-      let ftype = pty env ftype in
-
       parens
-        (string "jump" ^^ space ^^ j ^^ typs ^^ space ^^ terms ^^ colon ^^ ftype)
+        ( string "jump"
+        ^^ space
+        ^^ pvar env j
+        ^^ concat_map (brackets_pty env) typs
+        ^^ space
+        ^^ pfields (pterm0 env) terms
+        ^^ colon
+        ^^ pty env ftype )
     | TeLetRec (defs, term2) ->
-      let env =
-        List.fold_left (fun env (x, _, _) -> Export.bind env x) env defs
-      in
+      let env = Export.sbind env (get_xs defs) in
 
-      let _, doc1 =
-        List.fold_left
-          (fun (first, doc) (x, expected, term1) ->
-            let def1 =
-              string (if first then "let rec" else "and")
+      let defs =
+        List.mapi
+          (fun i (x, expected, term1) ->
+            let head =
+              string (if i = 0 then "let rec" else "and")
               ^^ line
               ^^ pvar env x
               ^^ colon
               ^^ pty env expected
               ^^ equal
             in
-
-            let term1 = pterm env term1 in
-
-            (false, doc ^^ group (group def1 ^^ jump term1)) )
-          (true, empty) defs
+            (head, pterm env term1) )
+          defs
       in
 
-      let doc2 = pterm env term2 in
-
-      group (doc1 ^^ string "in") ^^ line ^^ doc2
+      mutual_definitions defs (pterm env term2)
     | TeJoinRec (defs, term2) ->
-      let env =
-        List.fold_left (fun env (j, _, _, _, _) -> Export.bind env j) env defs
-      in
+      let env = Export.sbind env (get_js defs) in
 
-      let _, doc1 =
-        List.fold_left
-          (fun (first, doc) (j, typs, vars, ftype, term1) ->
+      let defs =
+        List.mapi
+          (fun i (j, typs, vars, ftype, term1) ->
             let env = Export.sbind env typs in
             let env = Export.sbind env (List.map fst vars) in
 
-            let j = pvar env j in
-            let typs = concat_map (ptype_argument env) typs in
-            let vars = concat_map (pterm_argument env) vars in
-            let ftype = pty env ftype in
-            let term1 = pterm env term1 in
-
-            let def1 =
-              string (if first then "join rec" else "and")
+            let head =
+              string (if i = 0 then "join rec" else "and")
               ^^ line
-              ^^ j
-              ^^ typs
-              ^^ vars
+              ^^ pvar env j
+              ^^ concat_map (ptype_argument env) typs
+              ^^ concat_map (pterm_argument env) vars
               ^^ colon
-              ^^ ftype
+              ^^ pty env ftype
               ^^ equal
             in
-
-            (false, doc ^^ group (group def1 ^^ jump term1)) )
-          (true, empty) defs
+            (head, pterm env term1) )
+          defs
       in
 
-      let doc2 = pterm env term2 in
-
-      group (doc1 ^^ string "in") ^^ line ^^ doc2
+      mutual_definitions defs (pterm env term2)
     | _ -> pterm1 env term )
 
 

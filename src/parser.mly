@@ -103,13 +103,13 @@ term_variable:
 | id = IDENTIFIER
     { Identifier.mak term_sort id }
 
-label_variable:
-| id = IDENTIFIER
-    { Identifier.mak label_sort id }
-
 type_variable:
 | id = IDENTIFIER
     { Identifier.mak type_sort id }
+
+label_variable:
+| id = IDENTIFIER
+    { Identifier.mak label_sort id }
 
 data_constructor:
 | id = TAG
@@ -232,6 +232,14 @@ recursive_def:
   EQ t = loc(term)
     { make_recursive_definition ty_args te_args codomain t }
 
+def_let_rec:
+| f = term_variable info = recursive_def
+    { let (expected, def) = info in (f, expected, def) }
+
+def_join_rec:
+| j = label_variable ty_vars = multiple(formal_type_arguments) te_args = multiple(term_arguments) COLON codomain = typ EQ def = loc(term)
+    { (j, ty_vars, te_args, codomain, def) }
+
 (* ------------------------------------------------------------------------- *)
 
 (* Terms. *)
@@ -291,14 +299,6 @@ term:
 
 | JOIN REC defs = separated_nonempty_list(AND, def_join_rec) IN body = loc(term)
     { SynTeJoinRec (defs, body) }
-
-def_let_rec:
-| f = term_variable info = recursive_def
-    { let (expected, def) = info in (f, expected, def) }
-
-def_join_rec:
-| j = label_variable ty_vars = multiple(formal_type_arguments) te_args = multiple(term_arguments) COLON codomain = typ EQ def = loc(term)
-    { (j, ty_vars, te_args, codomain, def) }
 
 (* ------------------------------------------------------------------------- *)
 

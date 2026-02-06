@@ -85,11 +85,11 @@ let rec erase (xenv : atom AtomMap.t) : fterm -> pre_fterm = function
   | TeJoinRec (defs, term2) ->
     let xenv, xs =
       List.fold_left_map
-        (fun xenv (j, _, _, _, _) ->
+        (fun xenv j ->
           let j_name = j |> Atom.identifier |> Identifier.name in
           let x = Atom.fresh (Identifier.mk j_name Syntax.term_sort) in
           (AtomMap.add j x xenv, x) )
-        xenv defs
+        xenv (get_js defs)
     in
 
     let defs =

@@ -155,15 +155,9 @@ let can_drop x t = not (AtomSet.mem x (Symbols.fv t))
 
 let can_drop_rec xs t = List.for_all (fun x -> can_drop x t) xs
 
-let can_drop_let_rec defs t =
-  let xs = List.map (fun (x, _, _) -> x) defs in
-  can_drop_rec xs t
+let can_drop_let_rec defs t = can_drop_rec (get_xs defs) t
 
-
-let can_drop_join_rec defs t =
-  let js = List.map (fun (j, _, _, _, _) -> j) defs in
-  can_drop_rec js t
-
+let can_drop_join_rec defs t = can_drop_rec (get_js defs) t
 
 (* ------------------------------------------------------------------------- *)
 

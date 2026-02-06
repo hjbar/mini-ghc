@@ -101,6 +101,8 @@ val jlookup : atom -> jenv -> atom list * ftype list
 
 val jbind : atom -> atom list -> ftype list -> jenv -> jenv
 
+val jbinds : atom list -> atom list list -> ftype list list -> jenv -> jenv
+
 (* ------------------------------------------------------------------------- *)
 
 (* Extra utilities. *)

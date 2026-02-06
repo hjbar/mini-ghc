@@ -126,11 +126,8 @@ let rec infer (* [infer] expects... *)
 
     expected
   | TeLetRec (defs, term2) ->
-    let tenv =
-      List.fold_left
-        (fun tenv (x, expected, _) -> bind x expected tenv)
-        tenv defs
-    in
+    let vars = get_typed_xs defs in
+    let tenv = binds vars tenv in
 
     List.iter
       (fun (_, expected, term1) -> check p xenv tsubst tenv jenv term1 expected)
@@ -138,16 +135,10 @@ let rec infer (* [infer] expects... *)
 
     infer p xenv loc tsubst tenv jenv term2
   | TeJoinRec (defs, term2) ->
-    let xenv =
-      List.fold_left (fun xenv (j, _, _, _, _) -> Export.bind xenv j) xenv defs
-    in
-    let jenv =
-      List.fold_left
-        (fun jenv (j, typs, vars, _, _) ->
-          let vars_typs = List.map snd vars in
-          jbind j typs vars_typs jenv )
-        jenv defs
-    in
+    let js = get_js defs in
+    let xenv = Export.sbind xenv js in
+    let vars_typss = List.map (List.map snd) (get_varss defs) in
+    let jenv = jbinds js (get_typss defs) vars_typss jenv in
 
     List.iter
       (fun (_, typs, vars, expected, term1) ->
@@ -156,12 +147,12 @@ let rec infer (* [infer] expects... *)
         check p xenv tsubst tenv jenv term1 expected )
       defs;
 
-    let _, _, _, expected, _ = List.hd defs in
+    let expected = get_expected defs in
     List.iter
-      (fun (_, _, _, expected', _) ->
+      (fun expected' ->
         if not (Types.equal expected expected') then
           mismatch xenv loc expected expected' )
-      defs;
+      (get_expecteds defs);
 
     check p xenv tsubst tenv jenv term2 expected;
 
@@ -359,6 +350,4 @@ let rec type_of (term : fterm) : ftype =
   | TeJoin (_, _, _, ty, _, _) -> ty
   | TeJump (_, _, _, ty) -> ty
   | TeLetRec (_, term2) -> type_of term2
-  | TeJoinRec (defs, _) ->
-    let _, _, _, ty, _ = List.hd defs in
-    ty
+  | TeJoinRec (defs, _) -> get_expected defs

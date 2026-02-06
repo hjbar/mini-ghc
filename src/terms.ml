@@ -131,6 +131,46 @@ and 'f _pattern = PatData of location * atom * atom list * atom list * 'f
 
 (* ------------------------------------------------------------------------- *)
 
+(* Utils for terms. *)
+
+(* [get_xs defs] returns the list of let rec binded variables *)
+
+let get_xs defs = List.map (fun (x, _, _) -> x) defs
+
+(* [get_typed_xs] returns the list of the binded variables with their types *)
+
+let get_typed_xs defs = List.map (fun (x, expected, _) -> (x, expected)) defs
+
+(* [get_terms1 defs] returns the list of let rec term definitions *)
+
+let get_terms1s defs = List.map (fun (_, _, terms1) -> terms1) defs
+
+(* [get_js defs] returns the list of join rec binded labels *)
+
+let get_js defs = List.map (fun (j, _, _, _, _) -> j) defs
+
+(* [get_typss defs] returns the list of join rec types variables *)
+
+let get_typss defs = List.map (fun (_, typs, _, _, _) -> typs) defs
+
+(* [get_varss defs] returns the list of join rec typed variables *)
+
+let get_varss defs = List.map (fun (_, _, vars, _, _) -> vars) defs
+
+(* [get_expecteds defs] returns the list of join rec expected types *)
+
+let get_expecteds defs = List.map (fun (_, _, _, expected, _) -> expected) defs
+
+(* [get_expected defs] returns the expected type of join rec definitions
+   The parser makes sure that the list of definitions is not empty *)
+
+let get_expected defs =
+  let _, _, _, expected, _ = List.hd defs in
+  expected
+
+
+(* ------------------------------------------------------------------------- *)
+
 (* The type constructor table maps a type constructor to its arity. *)
 
 type type_table = int AtomMap.t

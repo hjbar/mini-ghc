@@ -130,6 +130,11 @@ let jbind (j : atom) (a : atom list) (tys : ftype list) : jenv -> jenv =
   AtomMap.add j (a, tys)
 
 
+let jbinds js ass typss jenv : jenv =
+  let defs = List.combine (List.combine js ass) typss in
+  List.fold_left (fun jenv ((j, a), tys) -> jbind j a tys jenv) jenv defs
+
+
 (* ------------------------------------------------------------------------- *)
 
 (* Extra utilities. *)

@@ -154,13 +154,7 @@ let rec iterm tctable env = function
         iterms tctable env fields,
         itype tctable env ftype )
   | SynTeLetRec (defs, term2) ->
-    let env, xs =
-      List.fold_left_map
-        (fun env (x, _, _) ->
-          let x, env = bind env x in
-          (env, x) )
-        env defs
-    in
+    let xs, env = bind_simultaneously env (get_xs defs) in
 
     let defs =
       List.map2
@@ -171,13 +165,7 @@ let rec iterm tctable env = function
 
     TeLetRec (defs, iterm tctable env term2)
   | SynTeJoinRec (defs, term2) ->
-    let env, js =
-      List.fold_left_map
-        (fun env (j, _, _, _, _) ->
-          let j, env = bind env j in
-          (env, j) )
-        env defs
-    in
+    let js, env = bind_simultaneously env (get_js defs) in
 
     let defs =
       List.map2

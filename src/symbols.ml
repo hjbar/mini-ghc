@@ -29,36 +29,25 @@ let rec fv = function
   | TeMatch (term, _, clauses, _) ->
     AtomSet.union (fv term) (union_map fv_clause clauses)
   | TeJoin (j, _, vars, _, term1, term2) ->
-    let fv1 =
-      List.fold_left (fun acc (x, _) -> AtomSet.remove x acc) (fv term1) vars
-    in
+    let xs = List.map fst vars in
+    let fv1 = sremove xs (fv term1) in
+
     let fv2 = AtomSet.remove j (fv term2) in
+
     AtomSet.union fv1 fv2
   | TeJump (j, _, fields, _) -> AtomSet.add j (union_map fv fields)
   | TeLetRec (defs, term2) ->
-    let set1 =
-      List.fold_left
-        (fun set1 (_, _, term1) -> AtomSet.union set1 (fv term1))
-        AtomSet.empty defs
-    in
-    let set2 = fv term2 in
-    let set = AtomSet.union set1 set2 in
-    List.fold_left (fun set (x, _, _) -> AtomSet.remove x set) set defs
+    let fv1 = union_map fv (get_terms1s defs) in
+    sremove (get_xs defs) (AtomSet.union fv1 (fv term2))
   | TeJoinRec (defs, term2) ->
-    let set1 =
-      List.fold_left
-        (fun acc (_, _, vars, _, term1) ->
-          let set1 =
-            List.fold_left
-              (fun fv1 (x, _) -> AtomSet.remove x fv1)
-              (fv term1) vars
-          in
-          AtomSet.union acc set1 )
-        AtomSet.empty defs
+    let fv1 =
+      union_map
+        (fun (_, _, vars, _, term1) ->
+          let xs = List.map fst vars in
+          sremove xs (fv term1) )
+        defs
     in
-    let set2 = fv term2 in
-    let set = AtomSet.union set1 set2 in
-    List.fold_left (fun set (j, _, _, _, _) -> AtomSet.remove j set) set defs
+    sremove (get_js defs) (AtomSet.union fv1 (fv term2))
 
 
 and fv_clause = function
