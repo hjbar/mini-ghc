@@ -1,0 +1,30 @@
+type bool
+data constructor True : {} -> bool
+data constructor False : {} -> bool
+
+type int
+data constructor Zero : {} -> int
+data constructor Succ : { int } -> int
+
+type list a
+data constructor Nil : forall a. {} -> list a
+data constructor Cons : forall a. { a ; list a } -> list a
+
+program
+  let rec add (n: int) (m: int) : int =
+    match n return int with
+    | Zero {} -> m
+    | Succ { k } -> Succ { add k m }
+    end
+  in
+  let rec sum (l: list int) : int =
+    match l return int with
+    | Nil [_] {} -> Zero {}
+    | Cons [_] {x; xs} -> add x (sum xs)
+    end
+  in
+  let one = Succ { Zero {} } in
+  let two = Succ { one } in
+  let three = Succ { two } in
+  let mylist = Cons [int] { one ; Cons [int] { two ; Cons [int] { three ; Nil [int] {} } } } in
+  sum mylist

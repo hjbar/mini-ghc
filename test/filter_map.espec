@@ -1,0 +1,40 @@
+type list a
+data constructor Nil : forall a. {} -> list a
+data constructor Cons : forall a. { a; list a } -> list a
+type int
+data constructor Zero : {} -> int
+data constructor Succ : { int } -> int
+type bool
+data constructor True : {} -> bool
+data constructor False : {} -> bool
+program
+let rec map : forall a b. (a -> b) -> list a -> list b =
+  fun [a] [b] (f : a -> b) (l : list a) : list b =
+    match l return list b with
+    | Nil [_] {} ->
+        Nil [b] {}
+    | Cons [_] { x; l_1_ } ->
+        Cons [b] { f x; map [a] [b] f l_1_ }
+    end
+in
+let rec filter : forall a. (a -> bool) -> list a -> list a =
+  fun [a] (f : a -> bool) (l : list a) : list a =
+    match l return list a with
+    | Nil [_] {} ->
+        Nil [a] {}
+    | Cons [_] { x; l_1_ } ->
+        match f x return list a with
+        | False {} ->
+            filter [a] f l_1_
+        | True {} ->
+            Cons [a] { x; filter [a] f l_1_ }
+        end
+    end
+in
+(map [int] [int] (fun (n : int) : int = Succ { Succ { n } })
+(filter [int]
+(fun (n : int) : bool =
+  match n return bool with | Zero {} -> True {} | Succ { _ } -> False {} end)
+Cons
+[int]
+{ Zero {}; Cons [int] { Succ { Zero {} }; Nil [int] {} } }) : list int)

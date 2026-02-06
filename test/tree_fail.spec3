@@ -1,0 +1,51 @@
+type tree
+data constructor Node : { tree; int; tree } -> tree
+data constructor Leaf : {} -> tree
+type int
+data constructor Zero : {} -> int
+data constructor Succ : { int } -> int
+type bool
+data constructor True : {} -> bool
+data constructor False : {} -> bool
+program
+let rec eq : int -> int -> bool =
+  fun (a : int) (b : int) : bool =
+    match a return bool with
+    | Zero {} ->
+        match b return bool with
+        | Zero {} ->
+            True {}
+        | Succ { m } ->
+            False {}
+        end
+    | Succ { n } ->
+        match b return bool with
+        | Zero {} ->
+            False {}
+        | Succ { m } ->
+            eq n m
+        end
+    end
+in
+(join ret_true : bool = True {} in
+join ret_false : bool = False {} in
+join rec loop (t : tree) : bool =
+  match t return bool with
+  | Leaf {} ->
+      (jump ret_false {} : bool)
+  | Node { left; m; right } ->
+      match eq m Succ { Succ { Zero {} } } return bool with
+      | True {} ->
+          (jump ret_true {} : bool)
+      | False {} ->
+          (jump loop { left } : bool)
+      end
+  end
+in
+(jump loop {
+  Node
+  {
+    Leaf {}; Succ { Zero {} }; Node
+    { Leaf {}; Succ { Succ { Zero {} } }; Leaf {} }
+  }
+} : bool) : bool)
