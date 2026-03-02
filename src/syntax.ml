@@ -121,6 +121,25 @@ and pattern =
 
 (* ------------------------------------------------------------------------- *)
 
+(* Utils for terms. *)
+
+(* [get_xs defs] returns the list of let rec binded variables *)
+
+let get_xs (defs : (identifier * ftype * fterm) list) : identifier list =
+  List.map (fun (x, _, _) -> x) defs
+
+
+(* [get_js defs] returns the list of join rec binded labels *)
+
+let get_js
+  (defs :
+    (identifier * identifier list * (identifier * ftype) list * ftype * fterm)
+    list ) : identifier list =
+  List.map (fun (j, _, _, _, _) -> j) defs
+
+
+(* ------------------------------------------------------------------------- *)
+
 (* Programs. *)
 
 type program = SynProg of signature_item list * fterm

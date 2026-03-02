@@ -154,7 +154,7 @@ let rec iterm tctable env = function
         iterms tctable env fields,
         itype tctable env ftype )
   | SynTeLetRec (defs, term2) ->
-    let xs, env = bind_simultaneously env (get_xs defs) in
+    let xs, env = bind_simultaneously env (Syntax.get_xs defs) in
 
     let defs =
       List.map2
@@ -165,7 +165,7 @@ let rec iterm tctable env = function
 
     TeLetRec (defs, iterm tctable env term2)
   | SynTeJoinRec (defs, term2) ->
-    let js, env = bind_simultaneously env (get_js defs) in
+    let js, env = bind_simultaneously env (Syntax.get_js defs) in
 
     let defs =
       List.map2
