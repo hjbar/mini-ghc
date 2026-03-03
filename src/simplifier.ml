@@ -272,10 +272,9 @@ and simplify1 (args : context) (Scope (subst, tsubst, term) : fterm scoped) :
     let clauses =
       List.map
         (fun (Clause (pattern, term)) ->
-          let y = Atom.fresh (Identifier.mk "y" Syntax.term_sort) in
           let term = simplify (Scope (subst, tsubst, term)) in
-          let jump = TeJump (j, [], [ TeVar (y, reset ()) ], result') in
-          Clause (simplify_pattern pattern, TeLet (y, term, jump)) )
+          let jump = TeJump (j, [], [ term ], result') in
+          Clause (simplify_pattern pattern, jump) )
         clauses
     in
     let match_ = TeMatch (scrutinee, result', clauses, reset ()) in
